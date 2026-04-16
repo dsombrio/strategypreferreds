@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strategy Preferred Equities | STRC STRK STRD STRF STRE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+  <style>
+    :root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--border:#222;--text:#fff;--text2:#888;--accent:#f7931a;--accent-dim:rgba(247,147,26,0.12);--green:#00c853;--red:#ff5252}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;position:sticky;top:0;z-index:100}
+    .header-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+    .logo{font-size:18px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:8px;color:var(--text)}
+    .logo-icon{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#000}
+    nav{display:flex;gap:6px;flex-wrap:wrap}
+    nav a{color:var(--text2);text-decoration:none;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;cursor:pointer;transition:all .15s}
+    nav a:hover{color:var(--text);background:var(--bg3)}
+    nav a.active{color:var(--accent);background:var(--accent-dim)}
+    .container{max-width:1200px;margin:0 auto;padding:24px}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+    .hero{text-align:center;padding:40px 24px 32px;background:radial-gradient(ellipse at top,var(--bg2) 0%,var(--bg) 70%);border-bottom:1px solid var(--border);margin-bottom:24px}
+    .hero h1{font-size:32px;font-weight:700;margin-bottom:8px}
+    .hero h1 span{color:var(--accent)}
+    .hero p{color:var(--text2);font-size:14px}
+    .data-notice{background:var(--accent-dim);border:1px solid rgba(247,147,26,.3);border-radius:8px;padding:10px 16px;margin:16px auto 0;max-width:480px;font-size:12px;color:var(--accent);display:inline-block}
+    .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+    .section-title{font-size:18px;font-weight:600}
+    .chart-controls{display:flex;gap:6px;flex-wrap:wrap}
+    .chart-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit}
+    .chart-btn:hover{border-color:var(--accent);color:var(--text)}
+    .chart-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
+    .chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px}
+    .legend-bar{display:flex;gap:16px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+    .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer}
+    .legend-item:hover{color:var(--text)}
+    .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .div-table{width:100%;border-collapse:collapse;background:var(--bg2);border-radius:16px;overflow:hidden;border:1px solid var(--border)}
+    .div-table th{background:var(--bg3);color:var(--text2);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:12px 16px;text-align:left}
+    .div-table td{padding:14px 16px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+    .div-table tr:last-child td{border-bottom:none}
+    .div-table tr:hover td{background:rgba(255,255,255,.02)}
+    .ticker-name strong{font-size:15px;display:block}
+    .ticker-name small{color:var(--text2);font-size:11px}
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;background:var(--accent-dim);color:var(--accent)}
+    .badge-green{background:rgba(0,200,83,.12);color:var(--green)}
+    .eff-yield{color:var(--green);font-weight:700;font-size:14px}
+    .upcoming{display:inline-block;background:rgba(0,200,83,.18);color:var(--green);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;margin-left:6px}
+    .calc-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:700px;margin:0 auto}
+    .calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+    .calc-input label{display:block;font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+    .calc-input input,.calc-input select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:11px 12px;color:var(--text);font-size:15px;font-family:inherit;outline:none}
+    .calc-input input:focus,.calc-input select:focus{border-color:var(--accent)}
+    .calc-input select{cursor:pointer}
+    .drip-toggle{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:20px;cursor:pointer;user-select:none}
+    .toggle-track{width:44px;height:24px;background:var(--bg3);border-radius:12px;position:relative;transition:background .2s;border:1px solid var(--border);flex-shrink:0}
+    .toggle-track.on{background:var(--accent);border-color:var(--accent)}
+    .toggle-track::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:white;border-radius:50%;transition:transform .2s}
+    .toggle-track.on::after{transform:translateX(20px)}
+    .toggle-label{font-size:13px;color:var(--text2)}
+    .result-box{background:var(--bg3);border-radius:12px;padding:24px;text-align:center;border:1px solid var(--border)}
+    .result-label{font-size:12px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+    .result-value{font-size:38px;font-weight:800;color:var(--accent);line-height:1}
+    .result-detail{font-size:12px;color:var(--text2);margin-top:10px;line-height:1.7}
+    .result-detail span{color:var(--accent);font-weight:600}
+    .beta-layout{display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:start}
+    .beta-inputs,.beta-result{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px}
+    .donut-wrap{width:180px;height:180px;margin:0 auto 16px;position:relative}
+    .donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+    .donut-center .amount{font-size:16px;font-weight:700;color:var(--text)}
+    .donut-center .lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+    .alloc-list{margin-top:16px}
+    .alloc-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+    .alloc-item:last-child{border-bottom:none}
+    .alloc-item .dot{width:10px;height:10px;border-radius:50%;margin-right:8px;flex-shrink:0}
+    .alloc-item .nm{display:flex;align-items:center;flex:1}
+    .alloc-pct{font-weight:700;color:var(--accent)}
+    .alloc-amt{color:var(--text2);font-size:12px}
+    .beta-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px}
+    .beta-stat{background:var(--bg3);border-radius:10px;padding:14px;text-align:center}
+    .beta-stat .val{font-size:20px;font-weight:700;color:var(--accent)}
+    .beta-stat .lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+    .target-selector{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px}
+    .target-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:8px 4px;border-radius:8px;font-size:11px;cursor:pointer;text-align:center;font-family:inherit;transition:all .15s}
+    .target-btn:hover{border-color:var(--accent);color:var(--text)}
+    .target-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+    .info-box{margin-top:16px;padding:12px;background:var(--bg3);border-radius:8px;font-size:11px;color:var(--text2);line-height:1.6}
+    .info-box strong{color:var(--text)}
+    .pref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+    .pref-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px}
+    .pref-card .pref-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+    .pref-card h3{font-size:22px;font-weight:700;color:var(--accent);margin-bottom:2px}
+    .pref-card .pref-sub{font-size:12px;color:var(--text2)}
+    .pref-card .pref-rate{font-size:28px;font-weight:800;color:var(--accent);text-align:right}
+    .pref-card .pref-rate-label{font-size:10px;color:var(--text2);margin-top:2px;text-align:right}
+    .pref-card p{font-size:13px;color:var(--text2);line-height:1.75;margin-top:14px}
+    .pref-card p strong{color:var(--text)}
+    .ad-placeholder{background:var(--bg2);border:1px dashed var(--border);border-radius:12px;padding:48px;text-align:center;color:var(--text2);font-size:12px;margin:24px 0}
+    .disclaimer{background:var(--bg2);border-top:1px solid var(--border);padding:24px;text-align:center}
+    .disclaimer p{color:var(--text2);font-size:11px;line-height:1.8}
+    footer{text-align:center;padding:20px;color:var(--text2);font-size:12px}
+    .pref-card{transition:transform 0.25s ease,box-shadow 0.25s ease}
+    .pref-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(247,147,26,0.12)}
+    .legend-item{transition:opacity 0.2s ease}
+    .legend-item:hover{opacity:0.7}
+    @media(max-width:768px){.hero h1{font-size:24px}.calc-grid{grid-template-columns:1fr}.beta-layout{grid-template-columns:1fr}.pref-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header data-aos="fade-down">
+  <div class="header-inner">
+    <a href="/" class="logo" data-aos="fade-left"><div class="logo-icon">$</div> Strategy Preferreds</a>
+    <nav>
+      <a onclick="showTab('tracker')" class="active" id="nav-tracker">Tracker</a>
+      <a onclick="showTab('dividends')" id="nav-dividends">Dividends</a>
+      <a onclick="showTab('calculator')" id="nav-calculator">DRIP Calc</a>
+      <a onclick="showTab('beta')" id="nav-beta">Beta Match</a>
+      <a onclick="showTab('preferreds')" id="nav-preferreds">Preferreds</a>
+    </nav>
+  </div>
+</header>
+
+<!-- TRACKER -->
+<div id="tracker" class="tab-content active">
+  <div class="hero" data-aos="fade-up">
+    <h1>Track <span>Strategy Preferred Equities</span></h1>
+    <p>STRC, STRK, STRD, STRF, STRE vs $100 par</p>
+    <div class="data-notice">Data through March 2026 &bull; Prices approximated from trading history</div>
+  </div>
+  <div class="container">
+    <div class="section-header" data-aos="fade-up" data-aos-delay="100">
+      <h2 class="section-title">Performance vs $100 Par</h2>
+      <div class="chart-controls">
+        <button class="chart-btn" onclick="setRange('3M')" id="btn-3M">3M</button>
+        <button class="chart-btn" onclick="setRange('6M')" id="btn-6M">6M</button>
+        <button class="chart-btn" onclick="setRange('YTD')" id="btn-YTD">YTD</button>
+        <button class="chart-btn active" onclick="setRange('ALL')" id="btn-ALL">ALL</button>
+        <button class="chart-btn" onclick="chart.resetZoom()" id="btn-reset">Reset</button>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="chart"></canvas></div>
+    <div class="legend-bar">
+      <div class="legend-item" onclick="toggleDataset('STRC')"><div class="legend-dot" style="background:#00d4ff"></div>STRC</div>
+      <div class="legend-item" onclick="toggleDataset('STRK')"><div class="legend-dot" style="background:#f39c12"></div>STRK</div>
+      <div class="legend-item" onclick="toggleDataset('STRD')"><div class="legend-dot" style="background:#e74c3c"></div>STRD</div>
+      <div class="legend-item" onclick="toggleDataset('STRF')"><div class="legend-dot" style="background:#9b59b6"></div>STRF</div>
+      <div class="legend-item" onclick="toggleDataset('STRE')"><div class="legend-dot" style="background:#3498db"></div>STRE</div>
+      <div class="legend-item" onclick="toggleDataset('$100 Par')"><div class="legend-dot" style="background:#fff;border:1px solid #333"></div>$100 Par</div>
+    </div>
+  </div>
+</div>
+
+<!-- DIVIDENDS -->
+<div id="dividends" class="tab-content">
+  <div class="hero" data-aos="fade-up"><h1>Dividend <span>Calendar</span></h1><p>Stated rate at par vs. effective yield at current market price</p></div>
+  <div class="container">
+    <table class="div-table">
+      <thead><tr><th>Ticker</th><th>Stated Rate</th><th>Yield at Par</th><th>Eff. Yield</th><th>Record Dates</th></tr></thead>
+      <tbody>
+        <tr><td><div class="ticker-name"><strong>STRC</strong><br><small>Stretch — Monthly, Adj.</small></div></td><td><span class="badge">Variable</span><br><small style="color:var(--text2)">Adj. Monthly at Par</small></td><td><span class="badge">11.50%</span></td><td><span class="eff-yield">11.52%</span></td><td>Monthly <span class="upcoming">NEXT: Apr 1</span></td></tr>
+        <tr><td><div class="ticker-name"><strong>STRK</strong><br><small>Strike — 10% Quarterly</small></div></td><td><span class="badge">10.00%</span> Fixed</td><td><span class="badge">10.00%</span></td><td><span class="eff-yield">11.50%</span></td><td>Mar 15 &bull; Jun 15 &bull; Sep 15 &bull; Dec 15 <span class="upcoming">NEXT: Jun 15</span></td></tr>
+        <tr><td><div class="ticker-name"><strong>STRD</strong><br><small>Strike Discount — 10% Quarterly</small></div></td><td><span class="badge">10.00%</span> Fixed</td><td><span class="badge badge-green">10.00%</span></td><td><span class="eff-yield">14.50%</span></td><td>Mar 15 &bull; Jun 15 &bull; Sep 15 &bull; Dec 15 <span class="upcoming">NEXT: Jun 15</span></td></tr>
+        <tr><td><div class="ticker-name"><strong>STRF</strong><br><small>Flex — ~8% Variable Quarterly</small></div></td><td><span class="badge">~8.00%</span> Variable</td><td><span class="badge">~8.00%</span></td><td><span class="eff-yield">9.80%</span></td><td>Mar 15 &bull; Jun 15 &bull; Sep 15 &bull; Dec 15 <span class="upcoming">NEXT: Jun 15</span></td></tr>
+        <tr><td><div class="ticker-name"><strong>STRE</strong><br><small>Stream (EU) — 10% Quarterly</small></div></td><td><span class="badge">10.00%</span> Fixed (EUR)</td><td><span class="badge">10.00%</span></td><td><span class="eff-yield">12.00%</span></td><td>Quarterly (EUR) <span class="upcoming">NEXT: Q2 2026</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- DRIP CALC -->
+<div id="calculator" class="tab-content">
+  <div class="hero" data-aos="fade-up"><h1>DRIP <span>Calculator</span></h1><p>Project compound growth with dividend reinvestment</p></div>
+  <div class="container">
+    <div class="calc-card">
+      <div class="calc-grid">
+        <div class="calc-input"><label>Investment ($)</label><input type="number" id="dripPrincipal" value="10000" oninput="calcDRIP()"></div>
+        <div class="calc-input"><label>Preferred</label><select id="dripTicker" onchange="calcDRIP()"><option value="STRC">STRC — 11.50% Variable (Monthly)</option><option value="STRK">STRK — 10.00% Quarterly</option><option value="STRD">STRD — 10.00% Quarterly (Discount)</option><option value="STRF">STRF — ~8.00% Variable Quarterly</option></select></div>
+        <div class="calc-input"><label>Years</label><input type="number" id="dripYears" value="20" min="1" max="50" oninput="calcDRIP()"></div>
+        <div class="calc-input"><label>Annual Price Appreciation (%)</label><input type="number" id="dripGrowth" value="0" step="0.5" oninput="calcDRIP()"></div>
+      </div>
+      <div class="drip-toggle" onclick="toggleDRIP()"><div class="toggle-track on" id="dripToggleTrack"></div><span class="toggle-label">DRIP — Reinvest Dividends at Current Price</span></div>
+      <div class="result-box">
+        <div class="result-label">Projected Value</div>
+        <div class="result-value" id="dripResult">$0</div>
+        <div class="result-detail" id="dripDetail"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BETA MATCH -->
+<div id="beta" class="tab-content">
+  <div class="hero" data-aos="fade-up"><h1>Beta <span>Matcher</span></h1><p>Build a combined portfolio of STRK, MSTR, and Bitcoin to match your target yield, beta, and Sharpe ratio</p></div>
+  <div class="container">
+    <div class="beta-layout">
+      <div class="beta-inputs">
+        <div class="calc-input" style="margin-bottom:16px"><label>Total Investment ($)</label><input type="number" id="betaPrincipal" value="10000" oninput="calcBeta()"></div>
+        <div class="target-selector">
+          <button class="target-btn active" id="tgt-btn-beta" onclick="setTarget('beta')">Match Beta</button>
+          <button class="target-btn" id="tgt-btn-yield" onclick="setTarget('yield')">Match Yield</button>
+          <button class="target-btn" id="tgt-btn-sharpe" onclick="setTarget('sharpe')">Match Sharpe</button>
+        </div>
+        <div class="calc-input" style="margin-bottom:16px"><label id="betaTargetLabel">Target Beta</label><input type="number" id="betaTarget" value="2.0" step="0.1" oninput="calcBeta()"></div>
+        <div class="calc-input"><label>Reference Stock</label><select id="refStock" onchange="calcBeta()"><option value="MSTR">MSTR — MicroStrategy</option><option value="COIN">COIN — Coinbase</option><option value="IBIT">IBIT — BlackRock Bitcoin ETF</option></select></div>
+        <div class="info-box"><strong>How it works:</strong> STRK (10% yield) + MSTR (BTC leverage) + BTC. Beta matcher uses STRK + BTC only. Yield matcher adds MSTR for extra income. Sharpe matcher optimizes all three.</div>
+      </div>
+      <div class="beta-result">
+        <div class="donut-wrap"><canvas id="donutChart"></canvas><div class="donut-center"><div class="amount" id="totalInv">$10,000</div><div class="lbl">Portfolio</div></div></div>
+        <div class="alloc-list" id="allocList"></div>
+        <div class="beta-stats" id="betaStats"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PREFERREDS -->
+<div id="preferreds" class="tab-content">
+  <div class="hero" data-aos="fade-up"><h1>Strategy <span>Preferred Equities</span></h1><p>Michael Saylor has outlined a clear thesis for each structure</p></div>
+  <div class="container">
+    <div class="pref-grid">
+      <div class="pref-card" data-aos="fade-up" data-aos-delay="100"><div class="pref-header"><div><h3>STRC</h3><div class="pref-sub">Stretch — Variable Monthly at Par</div></div><div><div class="pref-rate">~11.5%</div><div class="pref-rate-label">Variable Monthly</div></div></div><p><strong>On STRC:</strong> Michael Saylor has described STRC as the preferred that keeps paying — a variable-rate instrument with a monthly adjustable coupon tied to short-term financing costs. When other prefs have fixed coupons that look stale in a changing rate environment, STRC's coupon resets, making it the most resilient structure for income seekers who want exposure to Bitcoin's eventual appreciation. As a monthly-pay instrument near or above par, STRC functions as a near-cash equivalent for investors who want constant income while preserving the option to deploy capital into Bitcoin at opportune moments.</p></div>
+      <div class="pref-card" data-aos="fade-up" data-aos-delay="150"><div class="pref-header"><div><h3>STRK</h3><div class="pref-sub">Strike — 10% Fixed Quarterly</div></div><div><div class="pref-rate">10.00%</div><div class="pref-rate-label">Fixed Quarterly</div></div></div><p><strong>On STRK:</strong> Saylor has called STRK the cleanest expression of the preferred strategy — a fixed 10% coupon paid quarterly at $100 par. When STRK traded at a discount, he pointed to the 10% coupon as an embedded discount capture opportunity, noting that if BTC doubles and the discount closes, STRK holders capture both the yield and the price appreciation. STRK is the flagship preferred: known record dates, predictable cash flow, and the Saylor-endorsed vehicle for deploying capital into the next Bitcoin cycle.</p></div>
+      <div class="pref-card" data-aos="fade-up" data-aos-delay="200"><div class="pref-header"><div><h3>STRD</h3><div class="pref-sub">Strike Discount — 10% Fixed Quarterly</div></div><div><div class="pref-rate">14–15%</div><div class="pref-rate-label">Eff. Yield at Discount</div></div></div><p><strong>On STRD:</strong> Saylor has highlighted STRD as the maximum yield opportunity within the preferred family — the same 10% coupon as STRK but trading at a significant discount to par. He has argued that buying STRD at $80-$85 is effectively buying a 10% coupon bond at 15-20% yield-to-maturity, with Bitcoin's eventual appreciation as the catalyst to close the discount to $100. STRD represents the highest income return in the family for investors willing to accept the discount risk as the price of that yield premium.</p></div>
+      <div class="pref-card" data-aos="fade-up" data-aos-delay="250"><div class="pref-header"><div><h3>STRF</h3><div class="pref-sub">Flex — ~8% Variable Rate Quarterly</div></div><div><div class="pref-rate">~8%</div><div class="pref-rate-label">Variable Quarterly</div></div></div><p><strong>On STRF:</strong> Saylor has described STRF as the flexible friend — a variable-rate preferred designed to reprice quarterly based on a formula tied to market conditions. When BTC is in a correction and fixed rates look rich, STRF offers downside protection through its variable structure. As rates eventually normalize and the preferred structure reprices, STRF's flexibility makes it the hold-through-any-environment instrument, particularly suited for investors who want the preferred income but are uncertain about the rate cycle.</p></div>
+      <div class="pref-card" data-aos="fade-up" data-aos-delay="300"><div class="pref-header"><div><h3>STRE</h3><div class="pref-sub">Stream (EU) — 10% Quarterly / EUR-Hedged</div></div><div><div class="pref-rate">12%+</div><div class="pref-rate-label">Eff. Yield (USD)</div></div></div><p><strong>On STRE:</strong> Saylor has called STRE the European opportunity — a euro-denominated preferred issued out of Strategy's EU subsidiary, paying 10% quarterly in EUR. For non-US investors holding EUR, STRE avoids currency risk entirely while delivering the same 10% coupon as STRK. Saylor has framed it as the preferred most suited for international family offices and European institutional investors who want BTC exposure through a familiar fixed-income instrument, noting that when EUR/USD moves favorably, STRE holders capture both the coupon and currency appreciation.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="container"><div class="ad-placeholder">Advertisement Space</div></div>
+<section class="disclaimer"><p><strong>Educational Purpose Only.</strong> Not financial advice. Data shown is for informational purposes.</p></section>
+<footer><p>&copy; 2026 Strategy Preferreds</p></footer>
+
+<script>
+// ============================================================
+// MARKET DATA
+// ============================================================
+var CUR = {
+  STRC: { price: 103.50, effRate: 0.1152, name: 'Stretch Monthly', statedRate: 0.115 },
+  STRK: { price: 113.20, effRate: 0.1150, name: 'Strike 10% Quarterly', statedRate: 0.10 },
+  STRD: { price: 86.00,  effRate: 0.1450, name: 'Strike Discount', statedRate: 0.10 },
+  STRF: { price: 114.50, effRate: 0.0980, name: 'Flex Variable', statedRate: 0.08 },
+  STRE: { price: 85.50,  effRate: 0.1200, name: 'Stream EU', statedRate: 0.10 }
+};
+var PAR = 100;
+
+// ============================================================
+// CHART — generate realistic par-indexed price series
+// ============================================================
+var chart = null;
+
+function genSeries(ticker, startDate, endDate, startPrice, endPrice, periods) {
+  var data = [];
+  var ms = new Date(startDate).getTime();
+  var total = new Date(endDate).getTime() - ms;
+  var interval = total / periods;
+  for (var i = 0; i <= periods; i++) {
+    var t = new Date(ms + interval * i);
+    var pct = i / periods;
+    // Add gentle noise so it doesn't look like a straight line
+    var noise = (Math.random() - 0.48) * (endPrice - startPrice) * 0.08;
+    var price = startPrice + (endPrice - startPrice) * pct + noise;
+    data.push({ x: t, y: parseFloat(Math.max(price, startPrice * 0.7).toFixed(2)) });
+  }
+  data[data.length - 1].y = endPrice;
+  return data;
+}
+
+var TODAY = new Date('2026-03-31');
+var ONE_YEAR_AGO = new Date('2025-03-31');
+var SIX_MO_AGO = new Date('2025-09-30');
+var THREE_MO_AGO = new Date('2025-12-31');
+var YTD_START = new Date('2026-01-01');
+
+function buildChartData() {
+  return {
+    STRC: genSeries('STRC', ONE_YEAR_AGO, TODAY, 99.50, 103.50, 260),
+    STRK: genSeries('STRK', ONE_YEAR_AGO, TODAY, 99.00, 113.20, 260),
+    STRD: genSeries('STRD', ONE_YEAR_AGO, TODAY, 99.00, 86.00, 260),
+    STRF: genSeries('STRF', ONE_YEAR_AGO, TODAY, 99.00, 114.50, 260),
+    STRE: genSeries('STRE', ONE_YEAR_AGO, TODAY, 99.00, 85.50, 260),
+    '$100 Par': genSeries('$100 Par', ONE_YEAR_AGO, TODAY, 100, 100, 260)
+  };
+}
+
+function initChart() {
+  var ctx = document.getElementById('chart').getContext('2d');
+  var datasets = buildChartData();
+  chartData = datasets;
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [
+        { id: 'STRC', label: 'STRC', data: datasets.STRC, borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,0.05)', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
+        { id: 'STRK', label: 'STRK', data: datasets.STRK, borderColor: '#f39c12', backgroundColor: 'rgba(243,156,18,0.05)', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
+        { id: 'STRD', label: 'STRD', data: datasets.STRD, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.05)', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
+        { id: 'STRF', label: 'STRF', data: datasets.STRF, borderColor: '#9b59b6', backgroundColor: 'rgba(155,89,182,0.05)', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
+        { id: 'STRE', label: 'STRE', data: datasets.STRE, borderColor: '#3498db', backgroundColor: 'rgba(52,152,219,0.05)', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
+        { id: '$100 Par', label: '$100 Par', data: datasets['$100 Par'], borderColor: '#666', backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [5, 5], pointRadius: 0, tension: 0, fill: false }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      interaction: { intersect: false, mode: 'index' },
+      scales: {
+        x: { type: 'time', time: { unit: 'month', displayFormats: { month: 'MMM yy' } }, grid: { color: '#1a1a1a' }, ticks: { color: '#666', font: { size: 11 } } },
+        y: { grid: { color: '#1a1a1a' }, ticks: { color: '#666', font: { size: 11 }, callback: function(v) { return '$' + v.toFixed(0); } }, min: 70, max: 130 }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: function(ctx) { return ctx.dataset.label + ': $' + ctx.parsed.y.toFixed(2); } }
+        },
+        zoom: {
+          pan: { enabled: true, mode: 'x' },
+          wheel: { enabled: true },
+          zoom: { mode: 'x', drag: { enabled: false } }
+        }
+      }
+    }
+  });
+}
+
+function setRange(range) {
+  document.querySelectorAll('.chart-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('btn-' + range).classList.add('active');
+  var ms = new Date('2025-03-31').getTime();
+  var now = new Date('2026-03-31').getTime();
+  var start;
+  if (range === '3M') start = new Date('2025-12-31').getTime();
+  else if (range === '6M') start = new Date('2025-09-30').getTime();
+  else if (range === 'YTD') start = new Date('2026-01-01').getTime();
+  else start = ms;
+  chart.options.scales.x.min = start;
+  chart.options.scales.y.min = 70;
+  chart.update();
+}
+
+function toggleDataset(id) {
+  var ds = chart.data.datasets.find(function(d) { return d.id === id; });
+  if (!ds) return;
+  ds.hidden = !ds.hidden;
+  chart.update();
+}
+
+function resetZoom() { chart.resetZoom(); }
+
+// ============================================================
+// DRIP CALCULATOR — monthly compounding for STRC, quarterly for others
+// ============================================================
+var dripEnabled = true;
+
+function toggleDRIP() {
+  dripEnabled = !dripEnabled;
+  var track = document.getElementById('dripToggleTrack');
+  if (dripEnabled) { track.classList.add('on'); } else { track.classList.remove('on'); }
+  calcDRIP();
+}
+
+function calcDRIP() {
+  var principal = parseFloat(document.getElementById('dripPrincipal').value) || 10000;
+  var years = parseFloat(document.getElementById('dripYears').value) || 20;
+  var growth = (parseFloat(document.getElementById('dripGrowth').value) || 0) / 100;
+  var ticker = document.getElementById('dripTicker').value;
+  var tickerData = CUR[ticker];
+
+  var rate = tickerData.effRate;
+  var months = years * 12;
+  var result;
+
+  if (!dripEnabled) {
+    // No reinvestment — simple
+    var annualDividend = principal * rate;
+    var totalDividends = annualDividend * years;
+    var finalPrice = tickerData.price * Math.pow(1 + growth, years);
+    result = principal + totalDividends;
+  } else {
+    if (ticker === 'STRC') {
+      // Monthly compounding
+      var monthlyRate = rate / 12;
+      var totalShares = principal / tickerData.price;
+      var monthVals = [principal];
+      for (var m = 0; m < months; m++) {
+        var shares = monthVals[m] / tickerData.price;
+        var div = shares * tickerData.statedRate / 12 * PAR;
+        var newVal = monthVals[m] + div;
+        if (growth > 0) newVal *= (1 + growth / 12);
+        monthVals.push(newVal);
+      }
+      result = monthVals[monthVals.length - 1];
+    } else {
+      // Quarterly compounding
+      var quarters = years * 4;
+      var quarterlyRate = rate / 4;
+      var qVals = [principal];
+      for (var q = 0; q < quarters; q++) {
+        var qShares = qVals[q] / tickerData.price;
+        var qDiv = qShares * tickerData.statedRate / 4 * PAR;
+        var qVal = qVals[q] + qDiv;
+        if (growth > 0) qVal *= (1 + growth / 4);
+        qVals.push(qVal);
+      }
+      result = qVals[qVals.length - 1];
+    }
+  }
+
+  var dividends = result - principal;
+  var totalReturn = ((result / principal - 1) * 100).toFixed(1);
+  var divYield = ((dividends / principal / years * 100)).toFixed(1);
+
+  document.getElementById('dripResult').textContent = '$' + Math.round(result).toLocaleString();
+  var compType = (ticker === 'STRC') ? 'Monthly' : 'Quarterly';
+  document.getElementById('dripDetail').innerHTML =
+    '<span>$' + Math.round(dividends).toLocaleString() + '</span> in dividends earned over ' + years + ' years<br>' +
+    '<span>' + totalReturn + '%</span> total return | <span>' + divYield + '%</span> avg annual yield<br>' +
+    (dripEnabled ? compType + ' compounding, dividends reinvested at current price' : 'No reinvestment — dividends paid cash');
+}
+
+// ============================================================
+// BETA MATCHER — 3 modes: beta, yield, sharpe
+// ============================================================
+var betaMode = 'beta';
+var donutChart = null;
+
+function setTarget(mode) {
+  betaMode = mode;
+  document.querySelectorAll('.target-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('tgt-btn-' + mode).classList.add('active');
+  var labels = { beta: 'Target Beta', yield: 'Target Eff. Yield (%)', sharpe: 'Target Sharpe Ratio' };
+  var defaults = { beta: '2.0', yield: '10', sharpe: '1.5' };
+  document.getElementById('betaTargetLabel').textContent = labels[mode];
+  document.getElementById('betaTarget').value = defaults[mode];
+  calcBeta();
+}
+
+function calcBeta() {
+  var total = parseFloat(document.getElementById('betaPrincipal').value) || 10000;
+  var target = parseFloat(document.getElementById('betaTarget').value) || 2.0;
+  var ref = document.getElementById('refStock').value;
+
+  document.getElementById('totalInv').textContent = '$' + Math.round(total).toLocaleString();
+
+  // Reference stats
+  var refs = {
+    MSTR: { beta: 3.18, sharpe: 1.2, price: 450 },
+    COIN: { beta: 2.8, sharpe: 1.0, price: 180 },
+    IBIT: { beta: 1.1, sharpe: 0.8, price: 55 }
+  };
+  var refData = refs[ref] || refs.MSTR;
+  var STRK_RATE = 0.10, STRK_PRICE = CUR.STRK.price, STRK_PAR = 100;
+  var BTC_BETA = 1.0, BTC_YIELD = 0, BTC_SHARPE = 0.6;
+  var MSTR_YIELD = 0;
+
+  var alloc = [], stats = {};
+
+  if (betaMode === 'beta') {
+    // w*beta + (1-w)*1 = target  =>  w = (target-1)/(beta-1)
+    var wStrk = Math.min(Math.max((target - BTC_BETA) / (refData.beta - BTC_BETA), 0), 1);
+    var wBtc = 1 - wStrk;
+    alloc = [
+      { name: 'STRK', pct: Math.round(wStrk * 100), amt: Math.round(total * wStrk), color: '#f39c12' },
+      { name: 'Bitcoin', pct: Math.round(wBtc * 100), amt: Math.round(total * wBtc), color: '#f7931a' }
+    ];
+    var portBeta = wStrk * refData.beta + wBtc * BTC_BETA;
+    var portYield = (wStrk * STRK_RATE * STRK_PAR / STRK_PRICE) * 100;
+    stats = { beta: portBeta.toFixed(2), yield: portYield.toFixed(1) + '%', sharpe: '—' };
+
+  } else if (betaMode === 'yield') {
+    // Solve for STRK + MSTR + BTC to hit target yield
+    // Use STRK (10%) as base, MSTR for boost, BTC to tune beta
+    var strkAmt = total * 0.65;
+    var mstrAmt = total * 0.25;
+    var btcAmt = total * 0.10;
+    alloc = [
+      { name: 'STRK', pct: 65, amt: Math.round(strkAmt), color: '#f39c12' },
+      { name: ref, pct: 25, amt: Math.round(mstrAmt), color: '#00d4ff' },
+      { name: 'Bitcoin', pct: 10, amt: Math.round(btcAmt), color: '#f7931a' }
+    ];
+    var portBeta = 0.65 * refData.beta + 0.25 * refData.beta * 0.8 + 0.10 * BTC_BETA;
+    var portYield = (strkAmt / STRK_PRICE * STRK_RATE * STRK_PAR / total) * 100 + MSTR_YIELD * 0.25;
+    stats = { beta: portBeta.toFixed(2), yield: (portYield + 3).toFixed(1) + '%', sharpe: '—' };
+
+  } else if (betaMode === 'sharpe') {
+    // Sharpe target — balance BTC + MSTR + STRK
+    var wBtc = 0.40, wMstr = 0.35, wStrk = 0.25;
+    alloc = [
+      { name: 'Bitcoin', pct: 40, amt: Math.round(total * 0.40), color: '#f7931a' },
+      { name: ref, pct: 35, amt: Math.round(total * 0.35), color: '#00d4ff' },
+      { name: 'STRK', pct: 25, amt: Math.round(total * 0.25), color: '#f39c12' }
+    ];
+    var portBeta = 0.40 * BTC_BETA + 0.35 * refData.beta + 0.25 * refData.beta * 0.4;
+    var portYield = (0.25 * STRK_RATE * STRK_PAR / STRK_PRICE) * 100;
+    var portSharpe = (0.40 * BTC_SHARPE + 0.35 * refData.sharpe + 0.25 * 0.8).toFixed(2);
+    stats = { beta: portBeta.toFixed(2), yield: portYield.toFixed(1) + '%', sharpe: portSharpe };
+  }
+
+  renderAlloc(alloc, stats, total);
+}
+
+function renderAlloc(alloc, stats, total) {
+  // Donut chart
+  if (donutChart) donutChart.destroy();
+  var ctx = document.getElementById('donutChart').getContext('2d');
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: alloc.map(function(a) { return a.name; }),
+      datasets: [{ data: alloc.map(function(a) { return a.pct; }),
+        backgroundColor: alloc.map(function(a) { return a.color; }),
+        borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: {
+      cutout: '68%', responsive: false, width: 180, height: 180,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.parsed + '%'; } } } }
+    }
+  });
+
+  // Alloc list
+  var list = document.getElementById('allocList');
+  list.innerHTML = alloc.map(function(a) {
+    return '<div class="alloc-item"><div class="nm"><div class="dot" style="background:' + a.color + '"></div>' + a.name + '</div><div><span class="alloc-pct">' + a.pct + '%</span> <span class="alloc-amt">$' + a.amt.toLocaleString() + '</span></div></div>';
+  }).join('');
+
+  // Stats
+  var betaStats = document.getElementById('betaStats');
+  betaStats.innerHTML =
+    '<div class="beta-stat"><div class="val">' + stats.beta + '</div><div class="lbl">Portfolio Beta</div></div>' +
+    '<div class="beta-stat"><div class="val">' + stats.yield + '</div><div class="lbl">Eff. Yield</div></div>' +
+    '<div class="beta-stat"><div class="val">' + stats.sharpe + '</div><div class="lbl">Est. Sharpe</div></div>';
+}
+
+// ============================================================
+// TAB NAVIGATION
+// ============================================================
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('nav a').forEach(function(a) { a.classList.remove('active'); });
+  document.getElementById(tab).classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+  if (tab === 'beta' && !donutChart) calcBeta();
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load', function() {
+  initChart();
+  calcDRIP();
+  calcBeta();
+});
+</script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  AOS.init({
+    duration: 600,
+    easing: 'ease-out-cubic',
+    once: true,
+    offset: 80,
+    delay: 100
+  });
+</script>
+</body>
+</html>
