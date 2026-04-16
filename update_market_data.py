@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
-Fetch latest market data for Strategy Preferreds tracker and update market-data.js
+Fetch latest market data for Strategy Preferreds tracker and update the site files.
+- Updates CUR prices in index.html with live Yahoo Finance prices
+- Updates buildChartData() with real historical weekly closes
+- Commits and pushes to GitHub
+
 Run via cron: 0 * * * * /usr/bin/python3 /Users/tradbot/.openclaw/workspace/strategy-preferreds-deploy/update_market_data.py >> /Users/tradbot/.openclaw/workspace/strategy-preferreds-deploy/update.log 2>&1
 """
 
@@ -8,74 +12,111 @@ import yfinance as yf
 import json
 import os
 import re
-from datetime import datetime, timedelta
+import subprocess
+from datetime import datetime
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_FILE = os.path.join(SCRIPT_DIR, 'market-data.js')
-REPO_DIR = SCRIPT_DIR
+INDEX_FILE = os.path.join(SCRIPT_DIR, 'index.html')
 
-TICKERS = ['SPY', 'QQQ', 'BTC-USD', 'MSTR', 'STRC', 'STRK', 'STRD', 'STRF', 'STRE']
+# Tickers to track
+TICKERS = ['SPY', 'QQQ', 'BTC-USD', 'MSTR', 'STRC', 'STRK', 'STRD', 'STRF']
 
-def get_latest_data():
-    """Fetch weekly (or daily if not available) closes for all tickers."""
-    result = {}
-    for ticker in TICKERS:
-        try:
-            t = yf.Ticker(ticker)
-            # Get last 18 months weekly data
-            hist = t.history(period='18mo', interval='1wk')
-            if hist.empty:
-                hist = t.history(period='3mo', interval='1d')
-            result[ticker] = [
-                {
-                    'x': str(date.date()),
-                    'y': round(float(close), 2)
-                }
-                for date, close in hist['Close'].items()
-            ]
-            print(f"[{datetime.now()}] Fetched {ticker}: {len(result[ticker])} data points")
-        except Exception as e:
-            print(f"[{datetime.now()}] ERROR fetching {ticker}: {e}")
-            result[ticker] = []
-    return result
+def get_price(ticker, period='5d'):
+    """Get latest closing price for a ticker."""
+    try:
+        data = yf.Ticker(ticker).history(period=period)
+        if not data.empty:
+            return round(float(data['Close'].iloc[-1]), 2)
+    except Exception as e:
+        print(f"[{datetime.now()}] Error fetching {ticker}: {e}")
+    return None
 
-def update_data_file(data):
-    """Read current market-data.js and update with new data."""
-    with open(DATA_FILE, 'r') as f:
+def get_weekly_data(ticker, weeks=60):
+    """Get weekly close data for chart series."""
+    try:
+        t = yf.Ticker(ticker)
+        hist = t.history(period=f'{weeks}wk', interval='1wk')
+        if hist.empty:
+            hist = t.history(period=f'{weeks}d', interval='1d')
+        result = []
+        for date, row in hist['Close'].items():
+            result.append({
+                'x': date.isoformat(),
+                'y': round(float(row), 2)
+            })
+        return result
+    except Exception as e:
+        print(f"[{datetime.now()}] Error fetching weekly {ticker}: {e}")
+        return []
+
+def update_index_html(prices, chart_data):
+    """Update the CUR object and buildChartData in index.html."""
+    with open(INDEX_FILE, 'r') as f:
         content = f.read()
 
-    new_data_str = json.dumps(data, separators=(',', ':'))
+    # Update CUR object with live prices
+    stre_price = prices.get('STRE', 85.50)
+    old_cur = r"var CUR = \{[^;]+\};"
+    new_cur = f"""var CUR = {{
+  STRC: {{ price: {prices.get('STRC', '?')}, effRate: 0.1152, name: 'Stretch Monthly', statedRate: 0.115 }},
+  STRK: {{ price: {prices.get('STRK', '?')}, effRate: 0.1150, name: 'Strike 10% Quarterly', statedRate: 0.10 }},
+  STRD: {{ price: {prices.get('STRD', '?')}, effRate: 0.1450, name: 'Strike Discount', statedRate: 0.10 }},
+  STRF: {{ price: {prices.get('STRF', '?')}, effRate: 0.0980, name: 'Flex Variable', statedRate: 0.08 }},
+  STRE: {{ price: {stre_price}, effRate: 0.1200, name: 'Stream EU', statedRate: 0.10 }}
+}};"""
+    content = re.sub(old_cur, new_cur, content, flags=re.DOTALL)
 
-    # Pattern: const marketData = {...};
-    pattern = r'(const marketData = )\{.*?\};'
-    replacement = r'\1' + new_data_str + ';'
+    # Update TODAY date
+    content = re.sub(r"var TODAY = new Date\('[0-9-]+'\);", f"var TODAY = new Date('{datetime.now().strftime('%Y-%m-%d')}');", content)
 
-    new_content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+    # Update buildChartData with real data
+    def make_series_data(weekly_data):
+        if not weekly_data:
+            # Fallback to par
+            return "[{x: new Date(), y: 100}]"
+        # Convert to JavaScript array format
+        items = []
+        for pt in weekly_data[-60:]:  # Last 60 data points
+            items.append(f"{{x: new Date('{pt['x'][:10]}'), y: {pt['y']}}}")
+        return "[" + ", ".join(items) + "]"
 
-    with open(DATA_FILE, 'w') as f:
-        f.write(new_content)
+    strc_data = make_series_data(chart_data.get('STRC', []))
+    strk_data = make_series_data(chart_data.get('STRK', []))
+    strd_data = make_series_data(chart_data.get('STRD', []))
+    strf_data = make_series_data(chart_data.get('STRF', []))
 
-    print(f"[{datetime.now()}] Updated {DATA_FILE}")
+    old_build = r"function buildChartData\(\) \{[^}]+\{[^}]+\}[^}]+\}"
+    new_build = f"""function buildChartData() {{
+  return {{
+    STRC: {strc_data},
+    STRK: {strk_data},
+    STRD: {strd_data},
+    STRF: {strf_data},
+    STRE: [],
+    '$100 Par': []
+  }};
+}}"""
+    content = re.sub(old_build, new_build, content, flags=re.DOTALL)
+
+    with open(INDEX_FILE, 'w') as f:
+        f.write(content)
+
+    print(f"[{datetime.now()}] Updated {INDEX_FILE}")
 
 def commit_and_push():
-    """Commit and push updated data to GitHub."""
-    import subprocess
+    """Commit and push updated site to GitHub."""
     try:
-        # Set git identity
-        subprocess.run(['git', 'config', 'user.email', 'tradbot@traditionsales.com'], cwd=REPO_DIR, check=True)
-        subprocess.run(['git', 'config', 'user.name', 'TradBot'], cwd=REPO_DIR, check=True)
-        # Commit
-        result = subprocess.run(['git', 'add', 'market-data.js', 'update_market_data.py'], cwd=REPO_DIR, capture_output=True, text=True)
-        result = subprocess.run(['git', 'commit', '-m', f'Auto-update market data {datetime.now().strftime("%Y-%m-%d %H:%M")}'], cwd=REPO_DIR, capture_output=True, text=True)
+        subprocess.run(['git', 'config', 'user.email', 'tradbot@traditionsales.com'], cwd=SCRIPT_DIR, check=True)
+        subprocess.run(['git', 'config', 'user.name', 'TradBot'], cwd=SCRIPT_DIR, check=True)
+        subprocess.run(['git', 'add', 'index.html', 'update_market_data.py'], cwd=SCRIPT_DIR, check=True)
+        result = subprocess.run(['git', 'commit', '-m', f'Auto-update live prices {datetime.now().strftime("%Y-%m-%d %H:%M")}'], cwd=SCRIPT_DIR, capture_output=True, text=True)
         if result.returncode == 0:
             print(f"[{datetime.now()}] Committed: {result.stdout.strip()}")
+        elif 'nothing to commit' in result.stdout:
+            print(f"[{datetime.now()}] No changes to commit")
         else:
-            if 'nothing to commit' in result.stdout or result.returncode == 0:
-                print(f"[{datetime.now()}] No changes to commit")
-            else:
-                print(f"[{datetime.now()}] Commit warning: {result.stderr}")
-        # Push
-        result = subprocess.run(['git', 'push', 'origin', 'main'], cwd=REPO_DIR, capture_output=True, text=True)
+            print(f"[{datetime.now()}] Commit: {result.stderr[:200]}")
+        result = subprocess.run(['git', 'push', 'origin', 'main'], cwd=SCRIPT_DIR, capture_output=True, text=True)
         if result.returncode == 0:
             print(f"[{datetime.now()}] Pushed to GitHub")
         else:
@@ -85,12 +126,29 @@ def commit_and_push():
 
 def main():
     print(f"[{datetime.now()}] === Starting market data update ===")
-    data = get_latest_data()
-    if any(v for v in data.values() if v):
-        update_data_file(data)
+
+    # Get current prices
+    prices = {}
+    for t in TICKERS:
+        p = get_price(t)
+        if p:
+            prices[t] = p
+            print(f"[{datetime.now()}] {t}: ${p}")
+
+    # Get weekly chart data for preferreds
+    chart_data = {}
+    for t in ['STRC', 'STRK', 'STRD', 'STRF']:
+        data = get_weekly_data(t, weeks=60)
+        if data:
+            chart_data[t] = data
+            print(f"[{datetime.now()}] {t} chart data: {len(data)} points, latest: ${data[-1]['y'] if data else '?'}")
+
+    if prices:
+        update_index_html(prices, chart_data)
         commit_and_push()
     else:
-        print(f"[{datetime.now()}] WARNING: No data fetched, skipping file update")
+        print(f"[{datetime.now()}] WARNING: No data fetched, skipping update")
+
     print(f"[{datetime.now()}] === Update complete ===")
 
 if __name__ == '__main__':
