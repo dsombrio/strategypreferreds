@@ -25,3 +25,30 @@
 [2026-04-16 17:06:01.242013] Commit: 
 [2026-04-16 17:06:01.689473] Pushed to GitHub
 [2026-04-16 17:06:01.689531] === Update complete ===
+/Users/tradbot/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+[2026-04-16 18:03:43.441921] === Starting market data update ===
+[2026-04-16 18:03:44.015277] SPY: $701.66
+[2026-04-16 18:03:44.118167] QQQ: $640.47
+[2026-04-16 18:03:44.250743] BTC-USD: $74929.28
+[2026-04-16 18:03:44.381755] MSTR: $148.94
+[2026-04-16 18:03:44.537357] STRC: $99.06
+[2026-04-16 18:03:44.668227] STRK: $74.75
+[2026-04-16 18:03:44.824696] STRD: $76.11
+[2026-04-16 18:03:44.965547] STRF: $98.83
+[2026-04-16 18:03:45.106985] STRC chart: 180 pts, last: $99.06 (2026-04-16)
+[2026-04-16 18:03:45.253885] STRK chart: 189 pts, last: $74.75 (2026-04-16)
+[2026-04-16 18:03:45.399417] STRD chart: 189 pts, last: $76.11 (2026-04-16)
+[2026-04-16 18:03:45.547131] STRF chart: 189 pts, last: $98.83 (2026-04-16)
+[2026-04-16 18:03:45.752458] SPY chart: 189 pts, last: $701.66 (2026-04-16)
+[2026-04-16 18:03:45.934791] QQQ chart: 189 pts, last: $640.47 (2026-04-16)
+[2026-04-16 18:03:46.031271] BTC-USD chart: 275 pts, last: $74929.28 (2026-04-16)
+[2026-04-16 18:03:46.175537] MSTR chart: 189 pts, last: $148.94 (2026-04-16)
+[2026-04-16 18:03:46.181144] Updated /Users/tradbot/.openclaw/workspace/strategy-preferreds-deploy/index.html
+  STRC: 180 daily points
+  STRK: 189 daily points
+  STRD: 189 daily points
+  STRF: 189 daily points
+[2026-04-16 18:03:46.323309] Commit: 
+[2026-04-16 18:03:46.781826] Pushed to GitHub
+[2026-04-16 18:03:46.781909] === Update complete ===
