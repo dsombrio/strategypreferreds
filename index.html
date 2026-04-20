@@ -4,12 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Strategy Preferred Equities | STRC STRK STRD STRF STRE</title>
+  <meta property="og:title" content="Strategy Preferred Equities — STRC, STRK, STRD, STRF Tracker">
+  <meta property="og:description" content="Track Strategy preferred stock yields, dividend calendars, and DRIP projections. Independent analysis of STRC, STRK, STRD, STRF, and STRE.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Strategy Preferred Equities Tracker">
+  <meta name="twitter:description" content="Track Strategy preferred stock yields and dividend calendars. STRC, STRK, STRD, STRF, STRE.">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1"></script>
   <style>
     :root{--bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--border:#222;--text:#fff;--text2:#888;--accent:#f7931a;--accent-dim:rgba(247,147,26,0.12);--green:#00c853;--red:#ff5252}
     *{margin:0;padding:0;box-sizing:border-box}
@@ -159,7 +167,7 @@
   <div class="hero" data-aos="fade-up">
     <h1>Track <span>Strategy Preferred Equities</span></h1>
     <p>STRC, STRK, STRD, STRF, STRE vs $100 par</p>
-    <div class="data-notice">Data through March 2026 &bull; Prices approximated from trading history</div>
+    <div class="data-notice">LiveFinnhub data &bull; Prices updated hourly</div>
   </div>
   <div class="container">
     <div class="section-header" data-aos="fade-up" data-aos-delay="100">
@@ -178,7 +186,6 @@
       <div class="legend-item" onclick="toggleDataset('STRK')"><div class="legend-dot" style="background:#f39c12"></div>STRK</div>
       <div class="legend-item" onclick="toggleDataset('STRD')"><div class="legend-dot" style="background:#e74c3c"></div>STRD</div>
       <div class="legend-item" onclick="toggleDataset('STRF')"><div class="legend-dot" style="background:#9b59b6"></div>STRF</div>
-      <div class="legend-item" onclick="toggleDataset('STRE')"><div class="legend-dot" style="background:#3498db"></div>STRE</div>
       <div class="legend-item" onclick="toggleDataset('$100 Par')"><div class="legend-dot" style="background:#fff;border:1px solid #333"></div>$100 Par</div>
     </div>
   </div>
@@ -236,7 +243,7 @@
         </div>
         <div class="calc-input" style="margin-bottom:16px"><label id="betaTargetLabel">Target Beta</label><input type="number" id="betaTarget" value="2.0" step="0.1" oninput="calcBeta()"></div>
         <div class="calc-input"><label>Reference Stock</label><select id="refStock" onchange="calcBeta()"><option value="MSTR">MSTR — MicroStrategy</option><option value="COIN">COIN — Coinbase</option><option value="IBIT">IBIT — BlackRock Bitcoin ETF</option></select></div>
-        <div class="info-box"><strong>How it works:</strong> STRK (10% yield) + MSTR (BTC leverage) + BTC. Beta matcher uses STRK + BTC only. Yield matcher adds MSTR for extra income. Sharpe matcher optimizes all three.</div>
+        <div class="info-box"><strong>How it works:</strong> STRK (10% yield) + MSTR (BTC leverage) + BTC. Beta matcher uses STRK + BTC only. Yield matcher adds MSTR for extra income. Sharpe matcher optimizes all three.<br><br><em>Stats: MSTR beta 3.18 (Finviz), COIN beta 2.8, IBIT beta 1.1. Sharpe ratios estimated. BTC assumed Sharpe 0.6, beta 1.0. Past performance does not guarantee future results.</em></div>
       </div>
       <div class="beta-result">
         <div class="donut-wrap"><canvas id="donutChart"></canvas><div class="donut-center"><div class="amount" id="totalInv">$10,000</div><div class="lbl">Portfolio</div></div></div>
@@ -249,7 +256,7 @@
 
 <!-- PREFERREDS -->
 <div id="preferreds" class="tab-content">
-  <div class="hero" data-aos="fade-up"><h1>Strategy <span>Preferred Equities</span></h1><p>Michael Saylor has outlined a clear thesis for each structure</p><div style="margin-top:16px"><a href="https://robinhood.com/tradbot" class="rh-cta" target="_blank" rel="noopener">Buy Preferreds on Robinhood</a></div></div>
+  <div class="hero" data-aos="fade-up"><h1>Strategy <span>Preferred Equities</span></h1><p>Michael Saylor has outlined a clear thesis for each structure</p><div style="margin-top:16px"><a href="https://www.robinhood.com" class="rh-cta" target="_blank" rel="noopener">Buy Preferreds on Robinhood</a></div></div>
   <div class="container">
     <div class="pref-grid">
       <div class="pref-card" data-aos="fade-up" data-aos-delay="100"><div class="pref-header"><div><h3>STRC <span class="live-price" id="price-STRC">—</span></h3><div class="pref-sub">Stretch — Variable Monthly at Par</div></div><div><div class="pref-rate" id="effRate-STRC">~11.5%</div><div class="pref-rate-label">Eff. Yield at Par</div></div></div><p><strong>On STRC:</strong> Michael Saylor has described STRC as the preferred that keeps paying — a variable-rate instrument with a monthly adjustable coupon tied to short-term financing costs. When other prefs have fixed coupons that look stale in a changing rate environment, STRC's coupon resets, making it the most resilient structure for income seekers who want exposure to Bitcoin's eventual appreciation. As a monthly-pay instrument near or above par, STRC functions as a near-cash equivalent for investors who want constant income while preserving the option to deploy capital into Bitcoin at opportune moments.</p></div>
@@ -261,9 +268,12 @@
   </div>
 </div>
 
-<div class="container"><div class="ad-placeholder">Advertisement Space</div></div>
-<section class="disclaimer"><p><strong>Educational Purpose Only.</strong> Not financial advice. Data shown is for informational purposes.</p></section>
-<footer><p>&copy; 2026 Strategy Preferreds</p></footer>
+<div class="container"></div>
+<section class="disclaimer"><p><strong>For informational purposes only.</strong> Not financial advice. This site is independently operated and is not affiliated with Strategy Corporation, MicroStrategy, or any associated entities. All data shown is approximate. Do your own research before investing.</p></section>
+<footer>
+<p><strong>StrategyPreferreds.com</strong> is an independent tracking site. Not affiliated with, endorsed by, or sponsored by Strategy Corporation (NASDAQ: MSTR) or any of its subsidiaries.</p>
+<p>Data shown for informational purposes only. Not financial advice. DYOR. &copy; 2026 StrategyPreferreds.com</p>
+</footer>
 
 <script>
 // ============================================================
@@ -369,7 +379,14 @@ function initChart() {
         zoom: {
           pan: { enabled: true, mode: 'x' },
           wheel: { enabled: true },
-          zoom: { mode: 'x', drag: { enabled: false } }
+          zoom: { mode: 'x', drag: { enabled: false } },
+          annotation: {
+            annotations: {
+              line100: { type: 'line', yMin: 100, yMax: 100, borderColor: '#444', borderWidth: 1, borderDash: [5, 5], label: { enabled: true, content: '$100 Par', position: 'end', backgroundColor: 'rgba(0,0,0,0)', color: '#666', font: { size: 10 } } } },
+              line90: { type: 'line', yMin: 90, yMax: 90, borderColor: '#333', borderWidth: 1, borderDash: [3, 3] },
+              line80: { type: 'line', yMin: 80, yMax: 80, borderColor: '#333', borderWidth: 1, borderDash: [3, 3] }
+            }
+          }
         }
       }
     }
@@ -476,7 +493,8 @@ function calcDRIP() {
   var totalReturn = ((result / principal - 1) * 100).toFixed(1);
   var divYield = ((dividends / principal / years * 100)).toFixed(1);
 
-  document.getElementById('dripResult').textContent = '$' + Math.round(result).toLocaleString();
+  var resultFormatted = result >= 1000000 ? '$' + (result/1000000).toFixed(2) + 'M' : '$' + Math.round(result).toLocaleString();
+  document.getElementById('dripResult').textContent = resultFormatted;
   var compType = (ticker === 'STRC') ? 'Monthly' : 'Quarterly';
   document.getElementById('dripDetail').innerHTML =
     '<span>$' + Math.round(dividends).toLocaleString() + '</span> in dividends earned over ' + years + ' years<br>' +
