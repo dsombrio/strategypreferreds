@@ -1,149 +1,106 @@
 #!/usr/bin/env python3
 """
-Fetch DAILY market data for Strategy Preferreds tracker.
-- Updates CUR prices in index.html with live Yahoo Finance prices
-- Updates window._chartData with real DAILY closes for chart
-- Commits and pushes to GitHub
+Strategy Preferreds - Market Data Update Script
+===============================================
+This script fetches live prices from Finnhub and writes them to prices.json.
+The HTML loads prices.json via fetch() on page load.
+
+IMPORTANT: This script does NOT modify index.html in any way.
+It only writes to prices.json which is loaded dynamically by the page.
+
+Run manually: python3 update_market_data.py
+Or set up a cron job: 0 * * * * cd /path/to/repo && python3 update_market_data.py >> update.log 2>&1
 """
 
-import yfinance as yf
-import json
-import os
-import re
-import subprocess
-from datetime import datetime
+import json, urllib.request, datetime, sys, os
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INDEX_FILE = os.path.join(SCRIPT_DIR, 'index.html')
+API_KEY = "d6f31jhr01qvn4o1lap0d6f31jhr01qvn4o1lapg"
+PRICE_FILE = os.path.join(os.path.dirname(__file__), "prices.json")
+INDEX_FILE = os.path.join(os.path.dirname(__file__), "index.html")
 
-TICKERS = ['SPY', 'QQQ', 'BTC-USD', 'MSTR', 'STRC', 'STRK', 'STRD', 'STRF']
+# Tickers to track
+TICKERS = {
+    "STRC": {"name": "STRC", "statedRate": 0.115, "freq": "monthly"},
+    "STRK": {"name": "STRK", "statedRate": 0.10, "freq": "quarterly"},
+    "STRD": {"name": "STRD", "statedRate": 0.10, "freq": "quarterly"},
+    "STRF": {"name": "STRF", "statedRate": 0.08, "freq": "quarterly"},
+    "STRE": {"name": "STRE", "statedRate": 0.10, "freq": "quarterly"},
+}
 
-def get_price(ticker, period='5d'):
+PAR = 100.0
+
+def get_finnhub_quote(ticker):
+    """Fetch quote from Finnhub. Returns dict with 'c' (close price) or None on failure."""
+    url = f"https://finnhub.io/api/v1/quote?symbol={ticker}&token={API_KEY}"
     try:
-        data = yf.Ticker(ticker).history(period=period)
-        if not data.empty:
-            return round(float(data['Close'].iloc[-1]), 2)
+        req = urllib.request.Request(url, headers={"Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read())
+            if data.get("c") and data["c"] > 0:
+                return {"price": data["c"], "o": data.get("o", 0), "h": data.get("h", 0), "l": data.get("l", 0), "pc": data.get("pc", 0)}
     except Exception as e:
-        print(f"[{datetime.now()}] Error fetching {ticker}: {e}")
+        print(f"  Finnhub error for {ticker}: {e}", file=sys.stderr)
     return None
 
-def get_daily_data(ticker, months=9):
-    try:
-        t = yf.Ticker(ticker)
-        hist = t.history(period=f'{months}mo', interval='1d')
-        result = []
-        for date, row in hist['Close'].items():
-            result.append({
-                'x': date.isoformat(),
-                'y': round(float(row), 2)
-            })
-        return result
-    except Exception as e:
-        print(f"[{datetime.now()}] Error fetching daily {ticker}: {e}")
-        return []
+def get_cached_or_fetch(ticker, cache):
+    """Try cache first (last known price), then Finnhub live."""
+    if ticker in cache and cache[ticker].get("price"):
+        return cache[ticker]
+    quote = get_finnhub_quote(ticker)
+    if quote:
+        return quote
+    # Fall back to cache even if stale
+    if ticker in cache:
+        return cache[ticker]
+    return None
 
-def update_index_html(prices, chart_data):
-    with open(INDEX_FILE, 'r') as f:
-        content = f.read()
-
-    today_str = datetime.now().strftime('%Y-%m-%d')
-
-    # 1. Update CUR object with live prices
-    old_cur = r"var CUR = \{[^;]+\};"
-    new_cur = f"""var CUR = {{
-  STRC: {{ price: {prices.get('STRC', '?')}, effRate: 0.1152, name: 'Stretch Monthly', statedRate: 0.115 }},
-  STRK: {{ price: {prices.get('STRK', '?')}, effRate: 0.1150, name: 'Strike 10% Quarterly', statedRate: 0.10 }},
-  STRD: {{ price: {prices.get('STRD', '?')}, effRate: 0.1450, name: 'Strike Discount', statedRate: 0.10 }},
-  STRF: {{ price: {prices.get('STRF', '?')}, effRate: 0.0980, name: 'Flex Variable', statedRate: 0.08 }},
-  STRE: {{ price: {prices.get('STRE', 85.5)}, effRate: 0.1200, name: 'Stream EU', statedRate: 0.10 }}
-}};"""
-    content = re.sub(old_cur, new_cur, content, flags=re.DOTALL)
-
-    # 2. Update window._chartData with real daily data
-    def make_js_array(arr):
-        if not arr:
-            return "[]"
-        items = [f"{{x: new Date('{pt['x'][:10]}'), y: {pt['y']}}}" for pt in arr]
-        return "[" + ", ".join(items) + "]"
-
-    chart_js = f"""window._chartData = {{
-  STRC: {make_js_array(chart_data.get('STRC', []))},
-  STRK: {make_js_array(chart_data.get('STRK', []))},
-  STRD: {make_js_array(chart_data.get('STRD', []))},
-  STRF: {make_js_array(chart_data.get('STRF', []))},
-  SPY:  {make_js_array(chart_data.get('SPY', []))},
-  QQQ:  {make_js_array(chart_data.get('QQQ', []))},
-  BTC:  {make_js_array(chart_data.get('BTC-USD', []))},
-  MSTR: {make_js_array(chart_data.get('MSTR', []))}
-}};"""
-
-    # Replace the window._chartData object
-    old_chart = r"window\._chartData = window\._chartData \|\| \{\};"
-    content = re.sub(old_chart, chart_js, content)
-
-    # Update TODAY date in the script
-    content = re.sub(
-        r"var TODAY = new Date\('[0-9-]+'\);",
-        f"var TODAY = new Date('{today_str}');",
-        content
-    )
-
-    with open(INDEX_FILE, 'w') as f:
-        f.write(content)
-
-    print(f"[{datetime.now()}] Updated {INDEX_FILE}")
-    for t in ['STRC', 'STRK', 'STRD', 'STRF']:
-        pts = len(chart_data.get(t, []))
-        print(f"  {t}: {pts} daily points")
-
-def commit_and_push():
-    try:
-        subprocess.run(['git', 'config', 'user.email', 'tradbot@traditionsales.com'], cwd=SCRIPT_DIR, check=True)
-        subprocess.run(['git', 'config', 'user.name', 'TradBot'], cwd=SCRIPT_DIR, check=True)
-        subprocess.run(['git', 'add', 'index.html', 'update_market_data.py'], cwd=SCRIPT_DIR, check=True)
-        result = subprocess.run(
-            ['git', 'commit', '-m', f'Auto-update daily prices {datetime.now().strftime("%Y-%m-%d %H:%M")}'],
-            cwd=SCRIPT_DIR, capture_output=True, text=True
-        )
-        if result.returncode == 0:
-            print(f"[{datetime.now()}] Committed")
-        elif 'nothing to commit' in result.stdout or result.returncode == 0:
-            print(f"[{datetime.now()}] No changes to commit")
-        else:
-            print(f"[{datetime.now()}] Commit: {result.stderr[:200]}")
-        result = subprocess.run(['git', 'push', 'origin', 'main'], cwd=SCRIPT_DIR, capture_output=True, text=True)
-        if result.returncode == 0:
-            print(f"[{datetime.now()}] Pushed to GitHub")
-        else:
-            print(f"[{datetime.now()}] Push: {result.stderr[:200]}")
-    except Exception as e:
-        print(f"[{datetime.now()}] Git error: {e}")
+def compute_yield(price, stated_rate):
+    """Compute effective yield based on price vs par."""
+    if price and price > 0:
+        annual_div = PAR * stated_rate
+        return annual_div / price
+    return None
 
 def main():
-    print(f"[{datetime.now()}] === Starting market data update ===")
+    print(f"[{datetime.datetime.now().isoformat()}] Updating market data...")
 
-    prices = {}
-    for t in TICKERS:
-        p = get_price(t)
-        if p:
-            prices[t] = p
-            print(f"[{datetime.now()}] {t}: ${p}")
+    # Load existing cache
+    cache = {}
+    if os.path.exists(PRICE_FILE):
+        try:
+            with open(PRICE_FILE) as f:
+                cache = json.load(f)
+        except:
+            pass
 
-    chart_data = {}
-    for t in ['STRC', 'STRK', 'STRD', 'STRF', 'SPY', 'QQQ', 'BTC-USD', 'MSTR']:
-        data = get_daily_data(t, months=9)
-        if data:
-            chart_data[t] = data
-            latest = data[-1]
-            print(f"[{datetime.now()}] {t} chart: {len(data)} pts, last: ${latest['y']} ({latest['x'][:10]})")
+    results = {}
+    for ticker, info in TICKERS.items():
+        quote = get_cached_or_fetch(ticker, cache)
+        if quote:
+            eff_yield = compute_yield(quote["price"], info["statedRate"])
+            results[ticker] = {
+                "price": round(quote["price"], 2),
+                "effRate": round(eff_yield, 4) if eff_yield else None,
+                "statedRate": info["statedRate"],
+                "name": info["name"],
+                "freq": info["freq"],
+                "par": PAR,
+                "updated": datetime.datetime.now().isoformat(),
+                "prev_close": quote.get("pc", quote.get("o", 0)),
+            }
+            print(f"  {ticker}: ${quote['price']:.2f} (eff yield: {(eff_yield*100):.2f}% if eff_yield else 'N/A')")
+        else:
+            print(f"  {ticker}: FAILED - using stale cache")
+            if ticker in cache:
+                results[ticker] = cache[ticker]
+                results[ticker]["stale"] = True
 
-    if prices:
-        update_index_html(prices, chart_data)
-        commit_and_push()
-    else:
-        print(f"[{datetime.now()}] WARNING: No data fetched")
+    # Write prices.json
+    with open(PRICE_FILE, "w") as f:
+        json.dump(results, f, indent=2)
+    print(f"  Wrote {PRICE_FILE}")
 
-    print(f"[{datetime.now()}] === Update complete ===")
+    print("[Done] Market data updated successfully.")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
