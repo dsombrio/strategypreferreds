@@ -715,46 +715,46 @@ function useManualBeta() {
 function runBetaCalc(targetBeta, targetYield) {
   // BTC: beta=1.0, yield=0%
   // MSTR: beta=3.18, yield=0%
-  // STRK: beta=0.65, yield = (10 * par) / price
-  // Fix BTC at 15% (within 10-20% range as instructed)
-  // Solve for wSTRK and wMSTR such that:
+  // STRK: beta=0.65, yield = (statedRate * par) / price
+  // Fix BTC at 15%, solve MSTR and STRK from the remaining 85%
+  // to match both target beta AND target yield exactly.
+  //
+  // System (with BTC fixed at 0.15):
   //   wBTC + wMSTR + wSTRK = 1
-  //   wBTC*1.0 + wMSTR*3.18 + wSTRK*0.65 ≈ targetBeta
-  //   wMSTR*0 + wSTRK*STRK_yield ≈ targetYield
+  //   wMSTR*3.18 + wSTRK*0.65 = targetBeta - 0.15   [beta eq]
+  //   wSTRK*STRK_yield            = targetYield         [yield eq]
+  //
+  // Solving: wSTRK = targetYield / STRK_yield
+  //          wMSTR = (targetBeta - 0.15 - wSTRK*0.65) / 3.18
 
-  var STRK_price = CUR.STRK.price;
+  var STRK_price = CUR.STRK.price || 74.75;
   var STRK_yield = (STRK_STATED_RATE * STRK_PAR) / STRK_price;
 
-  var wBTC = 0.15; // fixed
-  var remaining = 1 - wBTC; // 0.85
+  var wBTC = 0.15; // fixed at 15%
+  var wSTRK = 0;
+  var wMSTR = 0;
 
-  var wSTRK, wMSTR;
-
-  if (targetYield <= 0) {
-    // No yield needed — use BTC + MSTR only
-    wSTRK = 0;
-    wMSTR = Math.max(0, Math.min(1, (targetBeta - wBTC) / MSTR_BETA));
-    wBTC = 1 - wMSTR;
-    runBetaRender(wBTC, wMSTR, wSTRK, targetBeta, targetYield, STRK_yield);
-    return;
-  }
-
-  // From yield: wSTRK = targetYield / STRK_yield (from remaining capital)
-  wSTRK = (targetYield / STRK_yield) * remaining;
-
-  if (wSTRK > remaining) {
-    wSTRK = remaining;
-    wMSTR = 0;
-    // Beta constraint may not be met exactly — that's ok
+  if (targetYield > 0) {
+    wSTRK = Math.max(0, Math.min(1 - wBTC, targetYield / STRK_yield));
+    wMSTR = Math.max(0, (targetBeta - wBTC - wSTRK * STRK_BETA) / MSTR_BETA);
   } else {
-    wMSTR = remaining - wSTRK;
+    // No yield target — use BTC + MSTR only
+    wSTRK = 0;
+    wMSTR = Math.max(0, (targetBeta - wBTC) / MSTR_BETA);
   }
 
-  // Cap/floor
-  if (wSTRK < 0) { wMSTR += wSTRK; wSTRK = 0; }
-  if (wMSTR < 0) { wBTC += wMSTR; wMSTR = 0; }
-  wBTC = 1 - wMSTR - wSTRK;
-  if (wBTC < 0) { wSTRK += wBTC; wBTC = 0; }
+  // Normalize so weights sum to 1
+  var total = wBTC + wMSTR + wSTRK;
+  if (total > 1) {
+    var scale = 1 / total;
+    wBTC *= scale;
+    wMSTR *= scale;
+    wSTRK *= scale;
+  } else if (total < 0.9) {
+    // If beta/yield constraints push total below 90%, adjust BTC upward
+    wBTC = 1 - wMSTR - wSTRK;
+    wBTC = Math.max(0, wBTC);
+  }
 
   runBetaRender(wBTC, wMSTR, wSTRK, targetBeta, targetYield, STRK_yield);
 }
