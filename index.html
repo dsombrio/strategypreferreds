@@ -210,7 +210,7 @@
           <button type="submit">Subscribe</button>
         </form>
         <div class="email-form-sub">Free forever. Powered by Buttondown email.</div>
-        <div id="email-success">You are subscribed. Watch your inbox for a confirmation.</div>
+        <div id="email-success" style="display:none">You're on the list! Watch your inbox for a confirmation.</div>
       </div>
     </div>
   </section>
@@ -297,8 +297,35 @@
           <button class="target-btn" id="tgt-btn-sharpe" onclick="setTarget('sharpe')">Match Sharpe</button>
         </div>
         <div class="calc-input" style="margin-bottom:16px"><label id="betaTargetLabel">Target Beta</label><input type="number" id="betaTarget" value="2.0" step="0.1" oninput="calcBeta()"></div>
-        <div class="calc-input"><label>Reference Stock</label><select id="refStock" onchange="calcBeta()"><option value="MSTR">MSTR — MicroStrategy</option><option value="COIN">COIN — Coinbase</option><option value="IBIT">IBIT — BlackRock Bitcoin ETF</option></select></div>
-        <div class="info-box"><strong>How it works:</strong> STRK (10% yield) + MSTR (BTC leverage) + BTC. Beta matcher uses STRK + BTC only. Yield matcher adds MSTR for extra income. Sharpe matcher optimizes all three.<br><br><em>Stats: MSTR beta 3.18 (Finviz), COIN beta 2.8, IBIT beta 1.1. Sharpe ratios estimated. BTC assumed Sharpe 0.6, beta 1.0. Past performance does not guarantee future results.</em></div>
+        <div class="calc-input" style="margin-bottom:14px">
+          <label>Stock Ticker</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="betaTicker" placeholder="e.g. AAPL, JEPI, SCHD, JPM" style="flex:1;text-transform:uppercase" onkeydown="if(event.key==='Enter')document.getElementById('betaAnalyzeBtn').click()">
+            <button id="betaAnalyzeBtn" onclick="analyzeTicker()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">Analyze</button>
+          </div>
+        </div>
+        <div id="betaTickerInfo" style="margin-bottom:14px;padding:12px;background:var(--bg3);border-radius:8px;font-size:13px;display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
+            <div><div id="betaInfoTicker" style="font-weight:700;color:var(--accent);font-size:16px">—</div><div style="font-size:10px;color:var(--text2);text-transform:uppercase">Ticker</div></div>
+            <div><div id="betaInfoBeta" style="font-weight:700;color:var(--accent);font-size:16px">—</div><div style="font-size:10px;color:var(--text2);text-transform:uppercase">Beta</div></div>
+            <div><div id="betaInfoYield" style="font-weight:700;color:var(--accent);font-size:16px">—</div><div style="font-size:10px;color:var(--text2);text-transform:uppercase">Div Yield</div></div>
+            <div><div id="betaInfoPrice" style="font-weight:700;color:var(--accent);font-size:16px">—</div><div style="font-size:10px;color:var(--text2);text-transform:uppercase">Price</div></div>
+          </div>
+        </div>
+        <div id="betaError" style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.4);border-radius:8px;font-size:12px;color:var(--red)"></div>
+        <div id="betaLoading" style="display:none;margin-bottom:14px;text-align:center;padding:14px;font-size:13px;color:var(--text2)">
+          <span style="display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px"></span>
+          Looking up ticker on Finnhub...
+        </div>
+        <div id="betaManualInputs" style="margin-bottom:14px">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Or enter manually:</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="calc-input"><label>Beta</label><input type="number" id="manualBeta" value="1.5" step="0.1" oninput="useManualBeta()"></div>
+            <div class="calc-input"><label>Div Yield (%)</label><input type="number" id="manualYield" value="3.0" step="0.1" oninput="useManualBeta()"></div>
+          </div>
+        </div>
+        <div class="info-box"><strong>How it works:</strong> Enter any stock ticker above to look up its beta and dividend yield. We'll calculate a portfolio of BTC + MSTR + STRK that matches both risk and income. BTC is fixed at 10–20% as the foundation; MSTR adds leverage; STRK provides the yield.<br><br><em>BTC: beta 1.0, yield 0%. MSTR: beta ~3.18, yield 0%. STRK: beta ~0.65, yield based on current price. Past performance does not guarantee future results.</em></div>
+        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
       </div>
       <div class="beta-result">
         <div class="donut-wrap"><canvas id="donutChart"></canvas><div class="donut-center"><div class="amount" id="totalInv">$10,000</div><div class="lbl">Portfolio</div></div></div>
@@ -334,6 +361,7 @@
 // ============================================================
 // MARKET DATA
 // ============================================================
+var FINNHUB_KEY = 'd6f31jhr01qvn4o1lap0d6f31jhr01qvn4o1lapg';
 var CUR = {
   STRC: { price: 99.06, effRate: 0.1152, name: 'Stretch Monthly', statedRate: 0.115 },
   STRK: { price: 74.75, effRate: 0.1340, name: 'Strike 10% Quarterly', statedRate: 0.10 },
@@ -341,6 +369,35 @@ var CUR = {
   STRF: { price: 98.83, effRate: 0.0810, name: 'Flex Variable', statedRate: 0.08 },
   STRE: { price: 85.50, effRate: 0.1200, name: 'Stream EU', statedRate: 0.10 }
 };
+
+// Beta/market component constants
+var BTC_BETA = 1.0, BTC_YIELD = 0;
+var MSTR_BETA = 3.18, MSTR_YIELD = 0;
+var STRK_BETA = 0.65; // preferreds are less volatile than common stock
+var STRK_STATED_RATE = 0.10, STRK_PAR = 100;
+
+// Live price update for Strategy preferreds
+function updateFinnhubPrices() {
+  var tickers = ['STRC', 'STRK', 'STRD', 'STRF', 'STRE'];
+  tickers.forEach(function(ticker) {
+    var url = 'https://finnhub.io/api/v1/quote?symbol=' + ticker + '&token=' + FINNHUB_KEY;
+    fetch(url)
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data && data.c && data.c > 0) {
+          CUR[ticker].price = parseFloat(data.c.toFixed(2));
+          // Recalculate eff yield
+          var effRate = (STRK_STATED_RATE * STRK_PAR) / CUR[ticker].price;
+          CUR[ticker].effRate = effRate;
+          updatePreferredPrices();
+        }
+      })
+      .catch(function() { /* silent fail — keep fallback prices */ });
+  });
+}
+
+// Schedule live price updates every 60 seconds
+setInterval(updateFinnhubPrices, 60000);
 var PAR = 100;
 window._chartData = {
   STRC: [{x: new Date('2025-07-30'), y: 87.12}, {x: new Date('2025-07-31'), y: 87.1}, {x: new Date('2025-08-01'), y: 86.78}, {x: new Date('2025-08-04'), y: 88.86}, {x: new Date('2025-08-05'), y: 88.96}, {x: new Date('2025-08-06'), y: 89.42}, {x: new Date('2025-08-07'), y: 89.96}, {x: new Date('2025-08-08'), y: 89.88}, {x: new Date('2025-08-11'), y: 90.39}, {x: new Date('2025-08-12'), y: 90.15}, {x: new Date('2025-08-13'), y: 90.25}, {x: new Date('2025-08-14'), y: 90.35}, {x: new Date('2025-08-15'), y: 90.11}, {x: new Date('2025-08-18'), y: 89.46}, {x: new Date('2025-08-19'), y: 87.0}, {x: new Date('2025-08-20'), y: 87.36}, {x: new Date('2025-08-21'), y: 87.78}, {x: new Date('2025-08-22'), y: 88.34}, {x: new Date('2025-08-25'), y: 88.39}, {x: new Date('2025-08-26'), y: 88.91}, {x: new Date('2025-08-27'), y: 89.71}, {x: new Date('2025-08-28'), y: 90.54}, {x: new Date('2025-08-29'), y: 90.85}, {x: new Date('2025-09-02'), y: 90.6}, {x: new Date('2025-09-03'), y: 90.78}, {x: new Date('2025-09-04'), y: 90.58}, {x: new Date('2025-09-05'), y: 90.71}, {x: new Date('2025-09-08'), y: 90.68}, {x: new Date('2025-09-09'), y: 90.46}, {x: new Date('2025-09-10'), y: 90.53}, {x: new Date('2025-09-11'), y: 90.5}, {x: new Date('2025-09-12'), y: 90.39}, {x: new Date('2025-09-15'), y: 90.84}, {x: new Date('2025-09-16'), y: 90.89}, {x: new Date('2025-09-17'), y: 91.18}, {x: new Date('2025-09-18'), y: 91.4}, {x: new Date('2025-09-19'), y: 91.59}, {x: new Date('2025-09-22'), y: 91.45}, {x: new Date('2025-09-23'), y: 91.31}, {x: new Date('2025-09-24'), y: 91.4}, {x: new Date('2025-09-25'), y: 90.86}, {x: new Date('2025-09-26'), y: 90.94}, {x: new Date('2025-09-29'), y: 90.98}, {x: new Date('2025-09-30'), y: 90.99}, {x: new Date('2025-10-01'), y: 91.85}, {x: new Date('2025-10-02'), y: 92.78}, {x: new Date('2025-10-03'), y: 92.81}, {x: new Date('2025-10-06'), y: 92.95}, {x: new Date('2025-10-07'), y: 92.53}, {x: new Date('2025-10-08'), y: 92.72}, {x: new Date('2025-10-09'), y: 92.58}, {x: new Date('2025-10-10'), y: 92.46}, {x: new Date('2025-10-13'), y: 92.84}, {x: new Date('2025-10-14'), y: 92.62}, {x: new Date('2025-10-15'), y: 93.03}, {x: new Date('2025-10-16'), y: 92.01}, {x: new Date('2025-10-17'), y: 92.11}, {x: new Date('2025-10-20'), y: 93.26}, {x: new Date('2025-10-21'), y: 93.27}, {x: new Date('2025-10-22'), y: 92.79}, {x: new Date('2025-10-23'), y: 93.31}, {x: new Date('2025-10-24'), y: 93.35}, {x: new Date('2025-10-27'), y: 93.15}, {x: new Date('2025-10-28'), y: 93.24}, {x: new Date('2025-10-29'), y: 93.35}, {x: new Date('2025-10-30'), y: 93.52}, {x: new Date('2025-10-31'), y: 93.98}, {x: new Date('2025-11-03'), y: 94.2}, {x: new Date('2025-11-04'), y: 94.32}, {x: new Date('2025-11-05'), y: 94.57}, {x: new Date('2025-11-06'), y: 94.46}, {x: new Date('2025-11-07'), y: 93.79}, {x: new Date('2025-11-10'), y: 94.53}, {x: new Date('2025-11-11'), y: 94.57}, {x: new Date('2025-11-12'), y: 94.57}, {x: new Date('2025-11-13'), y: 93.27}, {x: new Date('2025-11-14'), y: 93.27}, {x: new Date('2025-11-17'), y: 90.24}, {x: new Date('2025-11-18'), y: 91.97}, {x: new Date('2025-11-19'), y: 90.25}, {x: new Date('2025-11-20'), y: 88.53}, {x: new Date('2025-11-21'), y: 91.0}, {x: new Date('2025-11-24'), y: 91.96}, {x: new Date('2025-11-25'), y: 91.87}, {x: new Date('2025-11-26'), y: 92.71}, {x: new Date('2025-11-28'), y: 92.23}, {x: new Date('2025-12-01'), y: 91.99}, {x: new Date('2025-12-02'), y: 93.31}, {x: new Date('2025-12-03'), y: 93.69}, {x: new Date('2025-12-04'), y: 93.69}, {x: new Date('2025-12-05'), y: 93.68}, {x: new Date('2025-12-08'), y: 94.01}, {x: new Date('2025-12-09'), y: 94.54}, {x: new Date('2025-12-10'), y: 94.44}, {x: new Date('2025-12-11'), y: 94.52}, {x: new Date('2025-12-12'), y: 94.52}, {x: new Date('2025-12-15'), y: 94.07}, {x: new Date('2025-12-16'), y: 94.2}, {x: new Date('2025-12-17'), y: 93.71}, {x: new Date('2025-12-18'), y: 94.26}, {x: new Date('2025-12-19'), y: 95.07}, {x: new Date('2025-12-22'), y: 95.26}, {x: new Date('2025-12-23'), y: 95.32}, {x: new Date('2025-12-24'), y: 95.28}, {x: new Date('2025-12-26'), y: 95.46}, {x: new Date('2025-12-29'), y: 95.12}, {x: new Date('2025-12-30'), y: 95.3}, {x: new Date('2025-12-31'), y: 95.12}, {x: new Date('2026-01-02'), y: 95.97}, {x: new Date('2026-01-05'), y: 96.22}, {x: new Date('2026-01-06'), y: 96.25}, {x: new Date('2026-01-07'), y: 96.27}, {x: new Date('2026-01-08'), y: 96.31}, {x: new Date('2026-01-09'), y: 96.31}, {x: new Date('2026-01-12'), y: 96.35}, {x: new Date('2026-01-13'), y: 96.3}, {x: new Date('2026-01-14'), y: 96.33}, {x: new Date('2026-01-15'), y: 97.16}, {x: new Date('2026-01-16'), y: 97.18}, {x: new Date('2026-01-20'), y: 96.32}, {x: new Date('2026-01-21'), y: 96.74}, {x: new Date('2026-01-22'), y: 96.89}, {x: new Date('2026-01-23'), y: 96.69}, {x: new Date('2026-01-26'), y: 96.25}, {x: new Date('2026-01-27'), y: 96.36}, {x: new Date('2026-01-28'), y: 96.19}, {x: new Date('2026-01-29'), y: 95.41}, {x: new Date('2026-01-30'), y: 96.19}, {x: new Date('2026-02-02'), y: 96.25}, {x: new Date('2026-02-03'), y: 95.67}, {x: new Date('2026-02-04'), y: 95.22}, {x: new Date('2026-02-05'), y: 91.02}, {x: new Date('2026-02-06'), y: 95.97}, {x: new Date('2026-02-09'), y: 96.9}, {x: new Date('2026-02-10'), y: 96.85}, {x: new Date('2026-02-11'), y: 97.17}, {x: new Date('2026-02-12'), y: 97.2}, {x: new Date('2026-02-13'), y: 97.9}, {x: new Date('2026-02-17'), y: 97.44}, {x: new Date('2026-02-18'), y: 97.6}, {x: new Date('2026-02-19'), y: 97.76}, {x: new Date('2026-02-20'), y: 97.92}, {x: new Date('2026-02-23'), y: 97.94}, {x: new Date('2026-02-24'), y: 98.0}, {x: new Date('2026-02-25'), y: 98.05}, {x: new Date('2026-02-26'), y: 98.09}, {x: new Date('2026-02-27'), y: 98.09}, {x: new Date('2026-03-02'), y: 98.09}, {x: new Date('2026-03-03'), y: 98.1}, {x: new Date('2026-03-04'), y: 98.14}, {x: new Date('2026-03-05'), y: 98.1}, {x: new Date('2026-03-06'), y: 98.11}, {x: new Date('2026-03-09'), y: 98.15}, {x: new Date('2026-03-10'), y: 98.11}, {x: new Date('2026-03-11'), y: 98.12}, {x: new Date('2026-03-12'), y: 98.1}, {x: new Date('2026-03-13'), y: 98.79}, {x: new Date('2026-03-16'), y: 98.87}, {x: new Date('2026-03-17'), y: 98.92}, {x: new Date('2026-03-18'), y: 98.62}, {x: new Date('2026-03-19'), y: 98.53}, {x: new Date('2026-03-20'), y: 98.6}, {x: new Date('2026-03-23'), y: 98.9}, {x: new Date('2026-03-24'), y: 98.99}, {x: new Date('2026-03-25'), y: 98.98}, {x: new Date('2026-03-26'), y: 99.01}, {x: new Date('2026-03-27'), y: 98.95}, {x: new Date('2026-03-30'), y: 99.01}, {x: new Date(), y: 99.06}, {x: new Date('2026-04-01'), y: 99.04}, {x: new Date('2026-04-02'), y: 99.04}, {x: new Date('2026-04-06'), y: 99.04}, {x: new Date('2026-04-07'), y: 99.04}, {x: new Date('2026-04-08'), y: 99.04}, {x: new Date('2026-04-09'), y: 99.04}, {x: new Date('2026-04-10'), y: 99.04}, {x: new Date('2026-04-13'), y: 99.04}, {x: new Date('2026-04-14'), y: 99.04}, {x: new Date('2026-04-15'), y: 99.32}, {x: new Date('2026-04-16'), y: 99.06}],
@@ -375,8 +432,6 @@ function genSeries(ticker, startDate, endDate, startPrice, endPrice, periods) {
   return data;
 }
 
-var TODAY = new Date('2026-04-20');
-var ONE_YEAR_AGO = new Date(now.getFullYear() - 1, now.getMonth(), 1);
 var SIX_MO_AGO = new Date('2025-09-30');
 var THREE_MO_AGO = new Date('2025-12-31');
 var YTD_START = new Date('2026-01-01');
@@ -558,10 +613,11 @@ function calcDRIP() {
 }
 
 // ============================================================
-// BETA MATCHER — 3 modes: beta, yield, sharpe
+// BETA MATCHER — user-entered ticker → BTC + MSTR + STRK portfolio
 // ============================================================
 var betaMode = 'beta';
 var donutChart = null;
+var lastTickerData = null; // { ticker, beta, yield, price }
 
 function setTarget(mode) {
   betaMode = mode;
@@ -571,69 +627,153 @@ function setTarget(mode) {
   var defaults = { beta: '2.0', yield: '10', sharpe: '1.5' };
   document.getElementById('betaTargetLabel').textContent = labels[mode];
   document.getElementById('betaTarget').value = defaults[mode];
-  calcBeta();
+  // Re-run if we have data
+  if (lastTickerData) runBetaCalc(lastTickerData.beta, lastTickerData.yield);
 }
 
-function calcBeta() {
-  var total = parseFloat(document.getElementById('betaPrincipal').value) || 10000;
-  var target = parseFloat(document.getElementById('betaTarget').value) || 2.0;
-  var ref = document.getElementById('refStock').value;
+function analyzeTicker() {
+  var ticker = (document.getElementById('betaTicker').value || '').trim().toUpperCase();
+  if (!ticker) return;
 
+  // Show loading, hide error and previous info
+  document.getElementById('betaLoading').style.display = 'block';
+  document.getElementById('betaError').style.display = 'none';
+  document.getElementById('betaTickerInfo').style.display = 'none';
+  document.getElementById('betaAnalyzeBtn').disabled = true;
+  document.getElementById('betaAnalyzeBtn').textContent = '...';
+
+  // Fetch metrics (beta + dividend yield) and quote (price) in parallel
+  var metricUrl = 'https://finnhub.io/api/v1/stock/metric?symbol=' + ticker + '&metric=all&token=' + FINNHUB_KEY;
+  var quoteUrl = 'https://finnhub.io/api/v1/quote?symbol=' + ticker + '&token=' + FINNHUB_KEY;
+
+  Promise.all([
+    fetch(metricUrl).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
+    fetch(quoteUrl).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; })
+  ]).then(function(results) {
+    var metrics = results[0];
+    var quote = results[1];
+
+    document.getElementById('betaLoading').style.display = 'none';
+    document.getElementById('betaAnalyzeBtn').disabled = false;
+    document.getElementById('betaAnalyzeBtn').textContent = 'Analyze';
+
+    if (!metrics || !metrics.metric) {
+      showBetaError('Ticker "' + ticker + '" not found on Finnhub. Please check the symbol and try again, or use the manual inputs below.');
+      return;
+    }
+
+    var beta = metrics.metric.beta;
+    var divYield = metrics.metric.dividYieldIndicatedAnnual || metrics.metric.dividYield5Y || 0;
+    var price = (quote && quote.c) ? quote.c : null;
+
+    if (beta === null || beta === undefined || isNaN(beta)) {
+      showBetaError('Beta data not available for "' + ticker + '". Use the manual inputs below to enter beta and yield yourself.');
+      return;
+    }
+
+    // Store for later recalculation
+    lastTickerData = { ticker: ticker, beta: parseFloat(beta), yield: parseFloat(divYield), price: price };
+
+    // Show ticker info
+    document.getElementById('betaTickerInfo').style.display = 'block';
+    document.getElementById('betaInfoTicker').textContent = ticker;
+    document.getElementById('betaInfoBeta').textContent = parseFloat(beta).toFixed(2);
+    document.getElementById('betaInfoYield').textContent = (parseFloat(divYield) * 100).toFixed(2) + '%';
+    document.getElementById('betaInfoPrice').textContent = price ? '$' + price.toFixed(2) : '—';
+
+    // Auto-fill manual inputs
+    document.getElementById('manualBeta').value = parseFloat(beta).toFixed(2);
+    document.getElementById('manualYield').value = (parseFloat(divYield) * 100).toFixed(2);
+
+    runBetaCalc(parseFloat(beta), parseFloat(divYield));
+
+  }).catch(function() {
+    document.getElementById('betaLoading').style.display = 'none';
+    document.getElementById('betaAnalyzeBtn').disabled = false;
+    document.getElementById('betaAnalyzeBtn').textContent = 'Analyze';
+    showBetaError('Network error looking up "' + ticker + '". Please try again or use the manual inputs below.');
+  });
+}
+
+function showBetaError(msg) {
+  var el = document.getElementById('betaError');
+  el.textContent = msg;
+  el.style.display = 'block';
+  lastTickerData = null;
+}
+
+function useManualBeta() {
+  var beta = parseFloat(document.getElementById('manualBeta').value) || 1.5;
+  var yieldPct = parseFloat(document.getElementById('manualYield').value) || 0;
+  lastTickerData = { ticker: null, beta: beta, yield: yieldPct / 100, price: null };
+  document.getElementById('betaTickerInfo').style.display = 'none';
+  runBetaCalc(beta, yieldPct / 100);
+}
+
+function runBetaCalc(targetBeta, targetYield) {
+  // Calculation:
+  // BTC: beta=1.0, yield=0%
+  // MSTR: beta=3.18, yield=0%
+  // STRK: beta=0.65, yield = (10/STRK_price)*100
+  // Fix BTC at 15% (within 10-20% range as instructed)
+  // Solve for wMSTR and wSTRK such that:
+  //   wBTC*1.0 + wMSTR*3.18 + wSTRK*0.65 = targetBeta
+  //   wMSTR*0 + wSTRK*STRK_yield = targetYield
+  //   wBTC + wMSTR + wSTRK = 1
+
+  var STRK_price = CUR.STRK.price;
+  var STRK_yield = (STRK_STATED_RATE * STRK_PAR) / STRK_price; // e.g. 10/74.75 = 0.1338
+
+  var wBTC = 0.15; // fixed at 15%
+
+  if (targetYield <= 0) {
+    // No yield target — just match beta using BTC + STRK (preferreds have lower beta than common stock)
+    // wBTC*1.0 + wSTRK*0.65 = targetBeta, wBTC + wSTRK = 1
+    var wSTRK = (targetBeta - wBTC) / (0.65 - wBTC);
+    wSTRK = Math.min(Math.max(wSTRK, 0), 1 - wBTC);
+    var wMSTR = 1 - wBTC - wSTRK;
+    runBetaRender(wBTC, wMSTR, wSTRK, targetBeta, targetYield, STRK_yield);
+  } else if (targetYield >= STRK_yield * (1 - wBTC)) {
+    // Yield target is very high — maximize STRK, use MSTR for beta
+    var wSTRK_max = 1 - wBTC;
+    var wMSTR = 0;
+    var wSTRK = Math.min(targetYield / STRK_yield, wSTRK_max);
+    wMSTR = 1 - wBTC - wSTRK;
+    if (wMSTR < 0) { wSTRK = 1 - wBTC; wMSTR = 0; }
+    runBetaRender(wBTC, wMSTR, wSTRK, targetBeta, targetYield, STRK_yield);
+  } else {
+    // Solve: wSTRK*STRK_yield = targetYield (from remaining 85%)
+    // wSTRK = targetYield / STRK_yield (from the non-BTC portion)
+    var remaining = 1 - wBTC;
+    var wSTRK = Math.min((targetYield / STRK_yield) * remaining, remaining);
+    wSTRK = Math.min(Math.max(wSTRK, 0), remaining);
+    var wMSTR = remaining - wSTRK;
+    runBetaRender(wBTC, wMSTR, wSTRK, targetBeta, targetYield, STRK_yield);
+  }
+}
+
+function runBetaRender(wBTC, wMSTR, wSTRK, targetBeta, targetYield, STRK_yield) {
+  var total = parseFloat(document.getElementById('betaPrincipal').value) || 10000;
   document.getElementById('totalInv').textContent = '$' + Math.round(total).toLocaleString();
 
-  // Reference stats
-  var refs = {
-    MSTR: { beta: 3.18, sharpe: 1.2, price: 450 },
-    COIN: { beta: 2.8, sharpe: 1.0, price: 180 },
-    IBIT: { beta: 1.1, sharpe: 0.8, price: 55 }
+  var actualBeta = wBTC * BTC_BETA + wMSTR * MSTR_BETA + wSTRK * STRK_BETA;
+  var actualYield = wMSTR * MSTR_YIELD + wSTRK * STRK_yield;
+
+  var alloc = [
+    { name: 'Bitcoin', pct: Math.round(wBTC * 100), amt: Math.round(total * wBTC), color: '#f7931a' },
+    { name: 'MSTR', pct: Math.round(wMSTR * 100), amt: Math.round(total * wMSTR), color: '#00d4ff' },
+    { name: 'STRK', pct: Math.round(wSTRK * 100), amt: Math.round(total * wSTRK), color: '#f39c12' }
+  ].filter(function(a) { return a.pct > 0; });
+
+  var tickerNote = lastTickerData && lastTickerData.ticker
+    ? 'Matching ' + lastTickerData.ticker + ' (beta ' + lastTickerData.beta.toFixed(2) + ', yield ' + (lastTickerData.yield * 100).toFixed(2) + '%)'
+    : 'Manual inputs';
+
+  var stats = {
+    beta: actualBeta.toFixed(2),
+    yield: (actualYield * 100).toFixed(1) + '%',
+    sharpe: tickerNote
   };
-  var refData = refs[ref] || refs.MSTR;
-  var STRK_RATE = 0.10, STRK_PRICE = CUR.STRK.price, STRK_PAR = 100;
-  var BTC_BETA = 1.0, BTC_YIELD = 0, BTC_SHARPE = 0.6;
-  var MSTR_YIELD = 0;
-
-  var alloc = [], stats = {};
-
-  if (betaMode === 'beta') {
-    // w*beta + (1-w)*1 = target  =>  w = (target-1)/(beta-1)
-    var wStrk = Math.min(Math.max((target - BTC_BETA) / (refData.beta - BTC_BETA), 0), 1);
-    var wBtc = 1 - wStrk;
-    alloc = [
-      { name: 'STRK', pct: Math.round(wStrk * 100), amt: Math.round(total * wStrk), color: '#f39c12' },
-      { name: 'Bitcoin', pct: Math.round(wBtc * 100), amt: Math.round(total * wBtc), color: '#f7931a' }
-    ];
-    var portBeta = wStrk * refData.beta + wBtc * BTC_BETA;
-    var portYield = (wStrk * STRK_RATE * STRK_PAR / STRK_PRICE) * 100;
-    stats = { beta: portBeta.toFixed(2), yield: portYield.toFixed(1) + '%', sharpe: '—' };
-
-  } else if (betaMode === 'yield') {
-    // Solve for STRK + MSTR + BTC to hit target yield
-    // Use STRK (10%) as base, MSTR for boost, BTC to tune beta
-    var strkAmt = total * 0.65;
-    var mstrAmt = total * 0.25;
-    var btcAmt = total * 0.10;
-    alloc = [
-      { name: 'STRK', pct: 65, amt: Math.round(strkAmt), color: '#f39c12' },
-      { name: ref, pct: 25, amt: Math.round(mstrAmt), color: '#00d4ff' },
-      { name: 'Bitcoin', pct: 10, amt: Math.round(btcAmt), color: '#f7931a' }
-    ];
-    var portBeta = 0.65 * refData.beta + 0.25 * refData.beta * 0.8 + 0.10 * BTC_BETA;
-    var portYield = (strkAmt / STRK_PRICE * STRK_RATE * STRK_PAR / total) * 100 + MSTR_YIELD * 0.25;
-    stats = { beta: portBeta.toFixed(2), yield: (portYield + 3).toFixed(1) + '%', sharpe: '—' };
-
-  } else if (betaMode === 'sharpe') {
-    // Sharpe target — balance BTC + MSTR + STRK
-    var wBtc = 0.40, wMstr = 0.35, wStrk = 0.25;
-    alloc = [
-      { name: 'Bitcoin', pct: 40, amt: Math.round(total * 0.40), color: '#f7931a' },
-      { name: ref, pct: 35, amt: Math.round(total * 0.35), color: '#00d4ff' },
-      { name: 'STRK', pct: 25, amt: Math.round(total * 0.25), color: '#f39c12' }
-    ];
-    var portBeta = 0.40 * BTC_BETA + 0.35 * refData.beta + 0.25 * refData.beta * 0.4;
-    var portYield = (0.25 * STRK_RATE * STRK_PAR / STRK_PRICE) * 100;
-    var portSharpe = (0.40 * BTC_SHARPE + 0.35 * refData.sharpe + 0.25 * 0.8).toFixed(2);
-    stats = { beta: portBeta.toFixed(2), yield: portYield.toFixed(1) + '%', sharpe: portSharpe };
-  }
 
   renderAlloc(alloc, stats, total);
 }
@@ -667,7 +807,7 @@ function renderAlloc(alloc, stats, total) {
   betaStats.innerHTML =
     '<div class="beta-stat"><div class="val">' + stats.beta + '</div><div class="lbl">Portfolio Beta</div></div>' +
     '<div class="beta-stat"><div class="val">' + stats.yield + '</div><div class="lbl">Eff. Yield</div></div>' +
-    '<div class="beta-stat"><div class="val">' + stats.sharpe + '</div><div class="lbl">Est. Sharpe</div></div>';
+    '<div class="beta-stat" style="align-self:center"><div class="val" style="font-size:12px;color:var(--text2);font-weight:500">' + stats.sharpe + '</div><div class="lbl" style="font-size:9px">Target Match</div></div>';
 }
 
 // ============================================================
@@ -678,7 +818,13 @@ function showTab(tab) {
   document.querySelectorAll('nav a').forEach(function(a) { a.classList.remove('active'); });
   document.getElementById(tab).classList.add('active');
   document.getElementById('nav-' + tab).classList.add('active');
-  if (tab === 'beta' && !donutChart) calcBeta();
+  if (tab === 'beta' && !donutChart) {
+    // Show default portfolio (no ticker lookup yet)
+    var defBeta = parseFloat(document.getElementById('manualBeta').value) || 1.5;
+    var defYield = (parseFloat(document.getElementById('manualYield').value) || 0) / 100;
+    lastTickerData = { ticker: null, beta: defBeta, yield: defYield, price: null };
+    runBetaCalc(defBeta, defYield);
+  }
   if (tab === 'preferreds') updatePreferredPrices();
   window.scrollTo(0, 0);
 }
@@ -694,7 +840,52 @@ function updatePreferredPrices() {
       var rate = CUR[ticker].effRate * 100;
       rateEl.textContent = rate.toFixed(1) + '%';
     }
+    // Also update home table prices
+    var homePriceEl = document.getElementById('home-price-' + ticker);
+    if (homePriceEl && CUR[ticker].price) {
+      var discountPct = ((CUR[ticker].price / 100 - 1) * 100).toFixed(0);
+      var discountHtml = discountPct < 0 ? ' <span class="home-discount">' + Math.abs(discountPct) + '% below par</span>' : '';
+      homePriceEl.innerHTML = '$' + CUR[ticker].price.toFixed(2) + ' <span class="par">@ $100 par</span>' + discountHtml;
+    }
+    var homeYieldEl = document.getElementById('home-eff-' + ticker);
+    if (homeYieldEl && CUR[ticker].effRate) {
+      homeYieldEl.textContent = (CUR[ticker].effRate * 100).toFixed(1) + '%';
+    }
   }
+}
+
+// ============================================================
+// EMAIL SUBSCRIBE — Buttondown integration
+// ============================================================
+function handleEmailSubmit(event) {
+  event.preventDefault();
+  var email = document.getElementById('email-input').value.trim();
+  if (!email) return;
+  var btn = event.target.querySelector('button[type="submit"]');
+  var successEl = document.getElementById('email-success');
+  btn.disabled = true;
+  btn.textContent = 'Subscribing...';
+
+  // Submit to Buttondown embed API
+  var formData = new FormData();
+  formData.append('email', email);
+
+  fetch('https://buttondown.email/api/emails/embed-subscribe/strategypreferreds', {
+    method: 'POST',
+    body: formData,
+    mode: 'no-cors' // Buttondown returns no CORS response, so use no-cors
+  })
+  .then(function() {
+    // no-cors: we can't read the response, assume success
+    successEl.style.display = 'block';
+    btn.textContent = 'Subscribe';
+    btn.disabled = false;
+    document.getElementById('email-input').value = '';
+  })
+  .catch(function() {
+    btn.textContent = 'Subscribe';
+    btn.disabled = false;
+  });
 }
 
 // ============================================================
@@ -703,7 +894,7 @@ function updatePreferredPrices() {
 window.addEventListener('load', function() {
   initChart();
   calcDRIP();
-  calcBeta();
+  updateFinnhubPrices(); // fetch live prices on load
   showTab('home');
 });
 </script>
