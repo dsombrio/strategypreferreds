@@ -570,8 +570,8 @@ function calcDRIP() {
   var dripEnabled = document.getElementById('dripToggle').checked;
 
   var tickerData = CUR[ticker] || CUR.STRK;
-  var price = tickerData.price;
-  var statedRate = tickerData.statedRate;
+  var price = tickerData.price || 74.75;
+  var statedRate = tickerData.statedRate || 0.10;
   var PAR = 100;
 
   var shares = principal / price;
