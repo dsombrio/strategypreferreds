@@ -23,6 +23,10 @@
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
     header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;position:sticky;top:0;z-index:100}
+    html{scroll-behavior:smooth;scroll-margin-top:80px}
+    .nav-link{color:var(--text2);text-decoration:none;font-size:13px;font-weight:500;padding:7px 12px;border-radius:8px;transition:all .15s;display:inline-block}
+    .nav-link:hover{color:var(--text);background:var(--bg3)}
+    .nav-link.active{color:var(--accent);background:var(--accent-dim)}
     .header-inner{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
     .logo{font-size:18px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:8px;color:var(--text)}
     .logo-icon{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#000}
@@ -31,8 +35,6 @@
     nav a:hover{color:var(--text);background:var(--bg3)}
     nav a.active{color:var(--accent);background:var(--accent-dim)}
     .container{max-width:1200px;margin:0 auto;padding:24px}
-    .tab-content{display:none}
-    .tab-content.active{display:block}
     .hero{text-align:center;padding:40px 24px 32px;background:radial-gradient(ellipse at top,var(--bg2) 0%,var(--bg) 70%);border-bottom:1px solid var(--border);margin-bottom:24px}
     .hero h1{font-size:32px;font-weight:700;margin-bottom:8px}
     .hero h1 span{color:var(--accent)}
@@ -153,19 +155,19 @@
   <div class="header-inner">
     <a href="/" class="logo" data-aos="fade-left"><div class="logo-icon">$</div> Strategy Preferreds</a>
     <nav>
-      <a onclick="showTab('home')" class="active" id="nav-home">Home</a>
-      <a onclick="showTab('tracker')" id="nav-tracker">Charts</a>
-      <a onclick="showTab('dividends')" id="nav-dividends">Dividends</a>
-      <a onclick="showTab('calculator')" id="nav-calculator">DRIP Calc</a>
-      <a onclick="showTab('beta')" id="nav-beta">Beta Match</a>
-      <a onclick="showTab('preferreds')" id="nav-preferreds">Preferreds</a>
+      <a href="#home" class="nav-link active">Home</a>
+      <a href="#tracker" class="nav-link">Charts</a>
+      <a href="#dividends" class="nav-link">Dividends</a>
+      <a href="#calculator" class="nav-link">DRIP Calc</a>
+      <a href="#beta" class="nav-link">Beta Match</a>
+      <a href="#preferreds" class="nav-link">Preferreds</a>
     </nav>
   </div>
 </header>
 
 <!-- HOME -->
 <!-- HOME -->
-<div id="home" class="tab-content active">
+<section id="home">
   <section class="home-hero">
     <div class="container">
       <div class="home-eyebrow" data-aos="fade-up">What Are Strategy Preferred Equities?</div>
@@ -214,11 +216,10 @@
       </div>
     </div>
   </section>
-</div>
-
+</section>
 
 <!-- TRACKER -->
-<div id="tracker" class="tab-content active">
+<section id="tracker">
   <div class="hero" data-aos="fade-up">
     <h1>Track <span>Strategy Preferred Equities</span></h1>
     <p>STRC, STRK, STRD, STRF, STRE vs $100 par</p>
@@ -247,7 +248,7 @@
 </div>
 
 <!-- DIVIDENDS -->
-<div id="dividends" class="tab-content">
+<section id="dividends">
   <div class="hero" data-aos="fade-up"><h1>Dividend <span>Calendar</span></h1><p>Stated rate at par vs. effective yield at current market price</p></div>
   <div class="container">
     <table class="div-table">
@@ -261,10 +262,10 @@
       </tbody>
     </table>
   </div>
-</div>
+</section>
 
 <!-- DRIP CALC -->
-<div id="calculator" class="tab-content">
+<section id="calculator">
   <div class="hero" data-aos="fade-up"><h1>DRIP <span>Calculator</span></h1><p>Project compound growth with dividend reinvestment</p></div>
   <div class="container">
     <div class="calc-card">
@@ -282,10 +283,10 @@
       </div>
     </div>
   </div>
-</div>
+</section>
 
 <!-- BETA MATCH -->
-<div id="beta" class="tab-content">
+<section id="beta">
   <div class="hero" data-aos="fade-up"><h1>Beta <span>Matcher</span></h1><p>Build a combined portfolio of STRK, MSTR, and Bitcoin to match your target yield, beta, and Sharpe ratio</p></div>
   <div class="container">
     <div class="beta-layout">
@@ -334,10 +335,10 @@
       </div>
     </div>
   </div>
-</div>
+</section>
 
 <!-- PREFERREDS -->
-<div id="preferreds" class="tab-content">
+<section id="preferreds">
   <div class="hero" data-aos="fade-up"><h1>Strategy <span>Preferred Equities</span></h1><p>Michael Saylor has outlined a clear thesis for each structure</p><div style="margin-top:16px"><a href="https://www.robinhood.com" class="rh-cta" target="_blank" rel="noopener">Buy Preferreds on Robinhood</a></div></div>
   <div class="container">
     <div class="pref-grid">
@@ -347,7 +348,7 @@
       <div class="pref-card" data-aos="fade-up" data-aos-delay="250"><div class="pref-header"><div><h3>STRF <span class="live-price" id="price-STRF">—</span></h3><div class="pref-sub">Flex — ~8% Variable Rate Quarterly</div></div><div><div class="pref-rate">~8%</div><div class="pref-rate-label">Variable Quarterly</div></div></div><p><strong>On STRF:</strong> Saylor has described STRF as the flexible friend — a variable-rate preferred designed to reprice quarterly based on a formula tied to market conditions. When BTC is in a correction and fixed rates look rich, STRF offers downside protection through its variable structure. As rates eventually normalize and the preferred structure reprices, STRF's flexibility makes it the hold-through-any-environment instrument, particularly suited for investors who want the preferred income but are uncertain about the rate cycle.</p></div>
       <div class="pref-card" data-aos="fade-up" data-aos-delay="300"><div class="pref-header"><div><h3>STRE <span class="live-price" id="price-STRE">—</span></h3><div class="pref-sub">Stream (EU) — 10% Quarterly / EUR-Hedged</div></div><div><div class="pref-rate">12%+</div><div class="pref-rate-label">Eff. Yield (USD)</div></div></div><p><strong>On STRE:</strong> Saylor has called STRE the European opportunity — a euro-denominated preferred issued out of Strategy's EU subsidiary, paying 10% quarterly in EUR. For non-US investors holding EUR, STRE avoids currency risk entirely while delivering the same 10% coupon as STRK. Saylor has framed it as the preferred most suited for international family offices and European institutional investors who want BTC exposure through a familiar fixed-income instrument, noting that when EUR/USD moves favorably, STRE holders capture both the coupon and currency appreciation.</p></div>
     </div>
-  </div>
+  </section>
 </div>
 
 <div class="container"></div>
@@ -778,56 +779,7 @@ function runBetaRender(wBTC, wMSTR, wSTRK, targetBeta, targetYield, STRK_yield) 
   renderAlloc(alloc, stats, total);
 }
 
-function renderAlloc(alloc, stats, total) {
-  // Donut chart
-  if (donutChart) donutChart.destroy();
-  var ctx = document.getElementById('donutChart').getContext('2d');
-  donutChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: alloc.map(function(a) { return a.name; }),
-      datasets: [{ data: alloc.map(function(a) { return a.pct; }),
-        backgroundColor: alloc.map(function(a) { return a.color; }),
-        borderWidth: 0, hoverOffset: 4 }]
-    },
-    options: {
-      cutout: '68%', responsive: false, width: 180, height: 180,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return ctx.label + ': ' + ctx.parsed + '%'; } } } }
-    }
-  });
 
-  // Alloc list
-  var list = document.getElementById('allocList');
-  list.innerHTML = alloc.map(function(a) {
-    return '<div class="alloc-item"><div class="nm"><div class="dot" style="background:' + a.color + '"></div>' + a.name + '</div><div><span class="alloc-pct">' + a.pct + '%</span> <span class="alloc-amt">$' + a.amt.toLocaleString() + '</span></div></div>';
-  }).join('');
-
-  // Stats
-  var betaStats = document.getElementById('betaStats');
-  betaStats.innerHTML =
-    '<div class="beta-stat"><div class="val">' + stats.beta + '</div><div class="lbl">Portfolio Beta</div></div>' +
-    '<div class="beta-stat"><div class="val">' + stats.yield + '</div><div class="lbl">Eff. Yield</div></div>' +
-    '<div class="beta-stat" style="align-self:center"><div class="val" style="font-size:12px;color:var(--text2);font-weight:500">' + stats.sharpe + '</div><div class="lbl" style="font-size:9px">Target Match</div></div>';
-}
-
-// ============================================================
-// TAB NAVIGATION
-// ============================================================
-function showTab(tab) {
-  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
-  document.querySelectorAll('nav a').forEach(function(a) { a.classList.remove('active'); });
-  document.getElementById(tab).classList.add('active');
-  document.getElementById('nav-' + tab).classList.add('active');
-  if (tab === 'beta' && !donutChart) {
-    // Show default portfolio (no ticker lookup yet)
-    var defBeta = parseFloat(document.getElementById('manualBeta').value) || 1.5;
-    var defYield = (parseFloat(document.getElementById('manualYield').value) || 0) / 100;
-    lastTickerData = { ticker: null, beta: defBeta, yield: defYield, price: null };
-    runBetaCalc(defBeta, defYield);
-  }
-  if (tab === 'preferreds') updatePreferredPrices();
-  window.scrollTo(0, 0);
-}
 
 function updatePreferredPrices() {
   for (var ticker in CUR) {
@@ -891,12 +843,8 @@ function handleEmailSubmit(event) {
 // ============================================================
 // INIT
 // ============================================================
-window.addEventListener('load', function() {
-  initChart();
-  calcDRIP();
-  updateFinnhubPrices(); // fetch live prices on load
-  showTab('home');
-});
+
+
 </script>
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
