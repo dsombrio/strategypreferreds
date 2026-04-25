@@ -590,7 +590,7 @@ function calcDRIP() {
     var periodicRate = statedRate / periodsPerYear;
 
     for (var p = 0; p < periods; p++) {
-      var divThisPeriod = shares * periodicRate / 100 * PAR;
+      var divThisPeriod = shares * periodicRate * PAR;
       shares += divThisPeriod / finalPrice; // buy more shares at current price
       totalDividends += divThisPeriod;
       if (growth > 0) {
