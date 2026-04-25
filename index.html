@@ -499,13 +499,13 @@ function initChart() {
         zoom: {
           pan: { enabled: true, mode: 'x' },
           wheel: { enabled: true },
-          zoom: { mode: 'x', drag: { enabled: false } },
-          annotation: {
-            annotations: {
-              line100: { type: 'line', yMin: 100, yMax: 100, borderColor: '#444', borderWidth: 1, borderDash: [5, 5], label: { enabled: true, content: '$100 Par', position: 'end', backgroundColor: 'rgba(0,0,0,0)', color: '#666', font: { size: 10 } } } },
-              line90: { type: 'line', yMin: 90, yMax: 90, borderColor: '#333', borderWidth: 1, borderDash: [3, 3] },
-              line80: { type: 'line', yMin: 80, yMax: 80, borderColor: '#333', borderWidth: 1, borderDash: [3, 3] }
-            }
+          zoom: { mode: 'x', drag: { enabled: false } }
+        },
+        annotation: {
+          annotations: {
+            line100: { type: 'line', yMin: 100, yMax: 100, borderColor: '#444', borderWidth: 1, borderDash: [5, 5], label: { enabled: true, content: '$100 Par', position: 'end', backgroundColor: 'rgba(0,0,0,0)', color: '#666', font: { size: 10 } } },
+            line90: { type: 'line', yMin: 90, yMax: 90, borderColor: '#333', borderWidth: 1, borderDash: [3, 3] },
+            line80: { type: 'line', yMin: 80, yMax: 80, borderColor: '#333', borderWidth: 1, borderDash: [3, 3] }
           }
         }
       }
@@ -575,7 +575,7 @@ function calcDRIP() {
   var PAR = 100;
 
   var shares = principal / price;
-  var annualDiv = shares * statedRate / 100 * PAR;
+  var annualDiv = shares * statedRate * PAR;
   var finalPrice = price;
   var totalDividends = 0;
 
