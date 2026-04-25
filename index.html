@@ -194,7 +194,48 @@
       .section-title{font-size:16px}
       .rh-cta{width:100%;text-align:center;padding:14px 24px}
     }
-  </style>
+  
+.pb-modes{display:flex;gap:24px;flex-wrap:wrap;margin:24px 0}
+.pb-mode-card{flex:1;min-width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px}
+.pb-mode-card h3{font-size:15px;font-weight:700;color:var(--text);margin:0 0 8px}
+.pb-mode-card>p{font-size:13px;color:var(--text2);margin:0 0 16px;line-height:1.5}
+.pb-input-row{display:flex;align-items:center;gap:10px;margin:12px 0;flex-wrap:wrap}
+.pb-input-row input{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:14px;outline:none;transition:border-color .2s}
+.pb-input-row input:focus{border-color:var(--accent)}
+.pb-input-row button{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.pb-input-row button:hover{opacity:.85}
+.pb-stats-card{background:var(--bg3);border-radius:12px;padding:20px;margin-top:16px;display:none}
+.stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-label{color:var(--text2);font-size:13px}
+.stat-val{color:var(--accent);font-weight:700;font-size:14px}
+.stat-val.na{color:var(--text2);font-style:italic}
+.source-badges{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;display:none}
+.source-badge{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text2);display:none}
+.source-badge.show{display:inline-block}
+.source-badge.warn{border-color:#f5a623;color:#f5a623}
+.source-badge.good{border-color:#4ade80;color:#4ade80}
+.pb-results{margin-top:32px;display:none;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;animation:fadeUp .3s ease-out}
+.pb-results-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.pb-results-header h3{font-size:17px;font-weight:700;color:var(--text);margin:0}
+.pb-results-header>div{display:flex;gap:10px;flex-wrap:wrap}
+.pb-results-header>div>div{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 16px;text-align:center;min-width:88px}
+.pb-results-header>div>div>div:first-child{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.pb-results-header>div>div>div:last-child{font-size:17px;font-weight:700;color:var(--accent)}
+.pb-alloc-table{width:100%;border-collapse:collapse;margin-top:4px}
+.pb-alloc-table th{text-align:left;color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;border-bottom:2px solid var(--border)}
+.pb-alloc-table td{padding:13px 14px;font-size:14px;color:var(--text)}
+.pb-alloc-table tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+.alloc-name{font-weight:600}
+.alloc-pct{color:var(--accent);font-weight:700}
+.alloc-dollars{color:var(--text2);font-size:13px}
+.pb-note{font-size:13px;color:var(--text2);background:var(--bg);border-radius:10px;padding:16px;margin-top:16px;line-height:1.6;border:1px solid var(--border)}
+.pb-note strong{color:var(--text)}
+#pbYieldResult{margin-top:16px;display:none}
+#pbYieldResult:empty{display:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+</style>
 </head>
 <body>
 <header data-aos="fade-down">
@@ -316,38 +357,75 @@
 
 <!-- BETA MATCH -->
 <section id="beta">
-  <div class="hero" data-aos="fade-up"><h1>Portfolio <span>Builder</span></h1><p>Compare any stock or ETF to the Strategy Preferred ecosystem</p></div>
-  <div class="container">
+  <div class="section-inner">
+    <h2>Portfolio Builder</h2>
+    <p>Compare any stock or ETF to the Strategy Preferred ecosystem — by ticker or by target yield.</p>
+
     <div class="pb-modes">
+      <!-- Mode 1: Ticker Analysis -->
       <div class="pb-mode-card">
         <h3>Ticker Analysis</h3>
-        <p>Enter any ticker to see how it compares.</p>
+        <p>Enter any ticker to see how its yield and volatility compare to the preferred ecosystem.</p>
         <div class="pb-input-row">
           <input type="text" id="pbTicker" placeholder="e.g. JEPI, AAPL, SCHD" value="" onkeydown="if(event.key==='Enter')pbAnalyze()">
-          <button id="pbAnalyzeBtn" onclick="pbAnalyze()">Analyze</button>
+          <button onclick="pbAnalyze()">Analyze</button>
         </div>
-        <div id="pbTickerStats" class="pb-stats-card" style="display:none"></div>
+        <div id="pbTickerStats" class="pb-stats-card">
+          <!-- Populated by pbAnalyze() -->
+        </div>
+        <div id="pbDataSources" class="source-badges">
+          <span class="source-badge" id="srcFinnhub">Finnhub: <span class="src-val" id="srcFinnhubVal">—</span></span>
+          <span class="source-badge" id="srcYahoo">Yahoo: <span class="src-val" id="srcYahooVal">—</span></span>
+          <span class="source-badge" id="srcCoingecko">BTC: <span class="src-val" id="srcBtcVal">—</span></span>
+        </div>
       </div>
+
+      <!-- Mode 2: Custom Yield Target -->
       <div class="pb-mode-card">
         <h3>Custom Yield Target</h3>
-        <p>Set a target yield and see how to build it with the preferred ecosystem.</p>
+        <p>Enter your target yield percentage — see how to build it with the preferred ecosystem.</p>
         <div class="pb-input-row">
           <input type="number" id="pbTargetYield" placeholder="e.g. 8" min="0" max="100" step="0.1" value="" onkeydown="if(event.key==='Enter')pbCalcTarget()">
-          <span class="sub">% yield</span>
+          <span style="color:var(--text2);font-size:13px">% yield</span>
           <button onclick="pbCalcTarget()">Calculate</button>
         </div>
-        <div id="pbYieldResult" style="display:none"></div>
+        <div id="pbYieldResult">
+          <!-- Populated by pbCalcTarget() -->
+        </div>
       </div>
     </div>
-    <div id="pbResults" class="pb-results" style="display:none"></div>
-    <div id="pbDataSources" class="pb-sources" style="display:none">
-      <span class="source-badge" id="srcFinnhub">Finnhub: <span class="src-val"></span></span>
-      <span class="source-badge" id="srcYahoo">Yahoo: <span class="src-val"></span></span>
-      <span class="source-badge" id="srcCoingecko">CoinGecko: <span class="src-val"></span></span>
-    </div>
-    <div class="pb-chart-area" style="margin-top:24px;display:none" id="pbChartArea">
-      <div class="donut-wrap"><canvas id="donutChart" width="200" height="200"></canvas><div class="donut-center"><div class="amount" id="totalInv">$10,000</div><div class="lbl">Portfolio</div></div></div>
-      <div class="alloc-list" id="allocList"></div>
+
+    <!-- Results -->
+    <div id="pbResults" class="pb-results">
+      <div class="pb-results-header">
+        <h3>Suggested Portfolio</h3>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px;text-align:center;min-width:90px">
+            <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">STRK Yield</div>
+            <div id="pbStrkYield" style="font-size:18px;font-weight:700;color:var(--accent)">—</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px;text-align:center;min-width:90px">
+            <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Portfolio Beta</div>
+            <div id="pbPortBeta" style="font-size:18px;font-weight:700;color:var(--accent)">—</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px;text-align:center;min-width:90px">
+            <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">$10K Value</div>
+            <div id="pbPortValue" style="font-size:18px;font-weight:700;color:var(--accent)">—</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;margin-top:20px">
+        <canvas id="donutChart" width="200" height="200" style="flex-shrink:0"></canvas>
+        <div style="flex:1;min-width:220px">
+          <table class="pb-alloc-table">
+            <thead><tr><th>Asset</th><th>Weight</th><th>$ Amount</th></tr></thead>
+            <tbody id="pbAllocBody">
+              <!-- Populated by pbRenderPortfolio() -->
+            </tbody>
+          </table>
+          <div id="pbNote" class="pb-note"></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
