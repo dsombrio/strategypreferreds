@@ -133,7 +133,43 @@
     .rh-cta:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,87,34,0.4)}
     /* Mobile */
     @media(max-width:768px){
-      .hero h1{font-size:22px}.calc-grid{grid-template-columns:1fr}.beta-layout{grid-template-columns:1fr}.pref-grid{grid-template-columns:1fr}
+    .pb-modes{display:flex;gap:24px;flex-wrap:wrap;margin:20px 0}
+    .pb-mode-card{flex:1;min-width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px}
+    .pb-mode-card h3{font-size:16px;font-weight:700;margin-bottom:4px}
+    .pb-mode-card>p{font-size:13px;color:var(--text2);margin-bottom:12px}
+    .pb-input-row{display:flex;align-items:center;gap:10px;margin:12px 0}
+    .pb-input-row input{background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:14px;flex:1}
+    .pb-input-row input:focus{outline:none;border-color:var(--accent)}
+    .pb-input-row button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-weight:600;font-size:14px;white-space:nowrap}
+    .pb-input-row button:hover{opacity:.85}
+    .pb-input-row .sub{font-size:12px;color:var(--text2);white-space:nowrap}
+    .pb-stats-card{background:var(--bg3);border-radius:8px;padding:16px;margin-top:12px}
+    .pb-stats-card .stat-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)}
+    .pb-stats-card .stat-row:last-child{border-bottom:none}
+    .pb-stats-card .stat-val{color:var(--accent);font-weight:600}
+    .pb-stats-card .stat-label{color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+    .source-badge{display:inline-block;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;margin-right:8px}
+    .source-badge.warn{border-color:#f5a623;color:#f5a623}
+    .source-badge .src-val{font-weight:600}
+    .pb-results{margin-top:24px;padding:20px;background:var(--bg2);border:1px solid var(--border);border-radius:12px}
+    .pb-results h3{font-size:15px;font-weight:700;margin-bottom:12px}
+    .alloc-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+    .alloc-row:last-child{border-bottom:none}
+    .alloc-pct{font-weight:600;color:var(--text)}
+    .alloc-amt{color:var(--text2)}
+    .alloc-color{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+    .pb-notes{font-size:12px;color:var(--text2);margin-top:14px;line-height:1.6}
+    .pb-error{padding:10px 14px;background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.4);border-radius:8px;font-size:12px;color:var(--red);margin-top:10px}
+    .pb-loading{text-align:center;padding:20px;font-size:13px;color:var(--text2)}
+    .pb-loading span{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .pb-chart-area{max-width:400px;margin:24px auto 0}
+    .pb-sources{margin-top:14px;font-size:12px}
+    .pb-sources:empty{display:none}
+    .pb-yield-result{padding:14px;background:var(--bg3);border-radius:8px;margin-top:12px;font-size:13px}
+    .pb-yield-result .alloc-row{padding:6px 0}
+    .pb-qty-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:var(--text2)}
+    .hero h1{font-size:22px}.calc-grid{grid-template-columns:1fr}.beta-layout{grid-template-columns:1fr}.pref-grid{grid-template-columns:1fr}
       header{font-size:13px}.header-inner{flex-wrap:wrap;gap:8px}
       nav{display:flex;flex-wrap:wrap;gap:4px;font-size:12px;padding:8px 0}
       nav a{padding:6px 10px}
@@ -280,52 +316,38 @@
 
 <!-- BETA MATCH -->
 <section id="beta">
-  <div class="hero" data-aos="fade-up"><h1>Beta <span>Matcher</span></h1><p>Build a combined portfolio of STRK, MSTR, and Bitcoin to match your target yield, beta, and Sharpe ratio</p></div>
+  <div class="hero" data-aos="fade-up"><h1>Portfolio <span>Builder</span></h1><p>Compare any stock or ETF to the Strategy Preferred ecosystem</p></div>
   <div class="container">
-    <div class="beta-layout">
-      <div class="beta-inputs">
-        <div class="calc-input" style="margin-bottom:16px"><label>Total Investment ($)</label><input type="number" id="betaPrincipal" value="10000" oninput="calcBeta()"></div>
-        <div class="target-selector">
-          <button class="target-btn active" id="tgt-btn-beta" onclick="setTarget('beta')">Match Beta</button>
-          <button class="target-btn" id="tgt-btn-yield" onclick="setTarget('yield')">Match Yield</button>
-          <button class="target-btn" id="tgt-btn-sharpe" onclick="setTarget('sharpe')">Match Sharpe</button>
+    <div class="pb-modes">
+      <div class="pb-mode-card">
+        <h3>Ticker Analysis</h3>
+        <p>Enter any ticker to see how it compares.</p>
+        <div class="pb-input-row">
+          <input type="text" id="pbTicker" placeholder="e.g. JEPI, AAPL, SCHD" value="" onkeydown="if(event.key==='Enter')pbAnalyze()">
+          <button id="pbAnalyzeBtn" onclick="pbAnalyze()">Analyze</button>
         </div>
-        <div class="calc-input" style="margin-bottom:16px"><label id="betaTargetLabel">Target Beta</label><input type="number" id="betaTarget" value="2.0" step="0.1" oninput="calcBeta()"></div>
-        <div class="calc-input" style="margin-bottom:14px">
-          <label>Stock Ticker</label>
-          <div style="display:flex;gap:8px">
-            <input type="text" id="betaTicker" placeholder="e.g. AAPL, JEPI, SCHD, JPM" style="flex:1;text-transform:uppercase" onkeydown="if(event.key==='Enter')document.getElementById('betaAnalyzeBtn').click()">
-            <button id="betaAnalyzeBtn" onclick="analyzeTicker()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">Analyze</button>
-          </div>
-        </div>
-        <div id="betaTickerInfo" style="margin-bottom:14px;padding:12px;background:var(--bg3);border-radius:8px;font-size:13px;display:none">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
-            <div><div id="betaInfoTicker" style="font-weight:700;color:var(--accent);font-size:16px">—</div><div style="font-size:10px;color:var(--text2);text-transform:uppercase">Ticker</div></div>
-            <div><div id="betaInfoBeta" style="font-weight:700;color:var(--accent);font-size:16px">—</div><div style="font-size:10px;color:var(--text2);text-transform:uppercase">Beta</div></div>
-            <div><div id="betaInfoYield" style="font-weight:700;color:var(--accent);font-size:16px">—</div><div style="font-size:10px;color:var(--text2);text-transform:uppercase">Div Yield</div></div>
-            <div><div id="betaInfoPrice" style="font-weight:700;color:var(--accent);font-size:16px">—</div><div style="font-size:10px;color:var(--text2);text-transform:uppercase">Price</div></div>
-          </div>
-        </div>
-        <div id="betaError" style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(255,82,82,.15);border:1px solid rgba(255,82,82,.4);border-radius:8px;font-size:12px;color:var(--red)"></div>
-        <div id="betaLoading" style="display:none;margin-bottom:14px;text-align:center;padding:14px;font-size:13px;color:var(--text2)">
-          <span style="display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px"></span>
-          Looking up ticker on Finnhub...
-        </div>
-        <div id="betaManualInputs" style="margin-bottom:14px">
-          <div style="font-size:11px;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">Or enter manually:</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div class="calc-input"><label>Beta</label><input type="number" id="manualBeta" value="1.5" step="0.1" oninput="useManualBeta()"></div>
-            <div class="calc-input"><label>Div Yield (%)</label><input type="number" id="manualYield" value="3.0" step="0.1" oninput="useManualBeta()"></div>
-          </div>
-        </div>
-        <div class="info-box"><strong>How it works:</strong> Enter any stock ticker above to look up its beta and dividend yield. We'll calculate a portfolio of BTC + MSTR + STRK that matches both risk and income. BTC is fixed at 10–20% as the foundation; MSTR adds leverage; STRK provides the yield.<br><br><em>BTC: beta 1.0, yield 0%. MSTR: beta ~3.18, yield 0%. STRK: beta ~0.65, yield based on current price. Past performance does not guarantee future results.</em></div>
-        <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+        <div id="pbTickerStats" class="pb-stats-card" style="display:none"></div>
       </div>
-      <div class="beta-result">
-        <div class="donut-wrap"><canvas id="donutChart"></canvas><div class="donut-center"><div class="amount" id="totalInv">$10,000</div><div class="lbl">Portfolio</div></div></div>
-        <div class="alloc-list" id="allocList"></div>
-        <div class="beta-stats" id="betaStats"></div>
+      <div class="pb-mode-card">
+        <h3>Custom Yield Target</h3>
+        <p>Set a target yield and see how to build it with the preferred ecosystem.</p>
+        <div class="pb-input-row">
+          <input type="number" id="pbTargetYield" placeholder="e.g. 8" min="0" max="100" step="0.1" value="" onkeydown="if(event.key==='Enter')pbCalcTarget()">
+          <span class="sub">% yield</span>
+          <button onclick="pbCalcTarget()">Calculate</button>
+        </div>
+        <div id="pbYieldResult" style="display:none"></div>
       </div>
+    </div>
+    <div id="pbResults" class="pb-results" style="display:none"></div>
+    <div id="pbDataSources" class="pb-sources" style="display:none">
+      <span class="source-badge" id="srcFinnhub">Finnhub: <span class="src-val"></span></span>
+      <span class="source-badge" id="srcYahoo">Yahoo: <span class="src-val"></span></span>
+      <span class="source-badge" id="srcCoingecko">CoinGecko: <span class="src-val"></span></span>
+    </div>
+    <div class="pb-chart-area" style="margin-top:24px;display:none" id="pbChartArea">
+      <div class="donut-wrap"><canvas id="donutChart" width="200" height="200"></canvas><div class="donut-center"><div class="amount" id="totalInv">$10,000</div><div class="lbl">Portfolio</div></div></div>
+      <div class="alloc-list" id="allocList"></div>
     </div>
   </div>
 </section>
@@ -613,172 +635,183 @@ function calcDRIP() {
 }
 
 // ============================================================
-// BETA MATCHER — user-entered ticker → BTC + MSTR + STRK portfolio
+// PORTFOLIO BUILDER — ticker analysis + custom yield target
 // ============================================================
-var betaMode = 'beta';
 var donutChart = null;
-var lastTickerData = null; // { ticker, beta, yield, price }
 
-function setTarget(mode) {
-  betaMode = mode;
-  document.querySelectorAll('.target-btn').forEach(function(b) { b.classList.remove('active'); });
-  document.getElementById('tgt-btn-' + mode).classList.add('active');
-  var labels = { beta: 'Target Beta', yield: 'Target Eff. Yield (%)', sharpe: 'Target Sharpe Ratio' };
-  var defaults = { beta: '2.0', yield: '10', sharpe: '1.5' };
-  document.getElementById('betaTargetLabel').textContent = labels[mode];
-  document.getElementById('betaTarget').value = defaults[mode];
-  // Re-run if we have data
-  if (lastTickerData) runBetaCalc(lastTickerData.beta, lastTickerData.yield);
-}
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
-function analyzeTicker() {
-  var ticker = (document.getElementById('betaTicker').value || '').trim().toUpperCase();
+function pbAnalyze() {
+  var ticker = (document.getElementById('pbTicker').value || '').trim().toUpperCase();
   if (!ticker) return;
+  var statsEl = document.getElementById('pbTickerStats');
+  var resultsEl = document.getElementById('pbResults');
+  var sourcesEl = document.getElementById('pbDataSources');
+  var chartArea = document.getElementById('pbChartArea');
 
-  // Show loading, hide error and previous info
-  document.getElementById('betaLoading').style.display = 'block';
-  document.getElementById('betaError').style.display = 'none';
-  document.getElementById('betaTickerInfo').style.display = 'none';
-  document.getElementById('betaAnalyzeBtn').disabled = true;
-  document.getElementById('betaAnalyzeBtn').textContent = '...';
+  statsEl.innerHTML = '<div class="pb-loading"><span></span>Looking up ' + ticker + '...</div>';
+  statsEl.style.display = 'block';
+  resultsEl.style.display = 'none';
+  sourcesEl.style.display = 'none';
+  chartArea.style.display = 'none';
 
-  // Fetch metrics (beta + dividend yield) and quote (price) in parallel
-  var metricUrl = 'https://finnhub.io/api/v1/stock/metric?symbol=' + ticker + '&metric=all&token=' + FINNHUB_KEY;
-  var quoteUrl = 'https://finnhub.io/api/v1/quote?symbol=' + ticker + '&token=' + FINNHUB_KEY;
+  var finnhubMetricUrl = 'https://finnhub.io/api/v1/stock/metric?symbol=' + ticker + '&metric=all&token=' + FINNHUB_KEY;
+  var finnhubQuoteUrl = 'https://finnhub.io/api/v1/quote?symbol=' + ticker + '&token=' + FINNHUB_KEY;
+  var yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + ticker + '?interval=1d&range=1d';
 
   Promise.all([
-    fetch(metricUrl).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
-    fetch(quoteUrl).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; })
+    fetch(finnhubMetricUrl).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
+    fetch(finnhubQuoteUrl).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
+    fetch(yahooUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; }),
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd').then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; })
   ]).then(function(results) {
-    var metrics = results[0];
-    var quote = results[1];
+    var fMetrics = results[0];
+    var fQuote = results[1];
+    var yahoo = results[2];
+    var btcUsd = results[3];
 
-    document.getElementById('betaLoading').style.display = 'none';
-    document.getElementById('betaAnalyzeBtn').disabled = false;
-    document.getElementById('betaAnalyzeBtn').textContent = 'Analyze';
+    var priceFinnhub = (fQuote && fQuote.c) ? parseFloat(fQuote.c.toFixed(2)) : null;
+    var priceYahoo = (yahoo && yahoo.chart && yahoo.chart.result && yahoo.chart.result[0] && yahoo.chart.result[0].meta) ? parseFloat(yahoo.chart.result[0].meta.regularMarketPrice.toFixed(2)) : null;
+    var beta = (fMetrics && fMetrics.metric && fMetrics.metric.beta != null) ? parseFloat(fMetrics.metric.beta.toFixed(2)) : null;
+    var divYield = (fMetrics && fMetrics.metric) ? (fMetrics.metric.dividYieldIndicatedAnnual || fMetrics.metric.dividYield5Y || null) : null;
+    var btcPrice = (btcUsd && btcUsd.bitcoin) ? btcUsd.bitcoin.usd : null;
 
-    if (!metrics || !metrics.metric) {
-      showBetaError('Ticker "' + ticker + '" not found on Finnhub. Please check the symbol and try again, or use the manual inputs below.');
-      return;
+    // Source badges
+    var srcFinnhubEl = document.getElementById('srcFinnhub');
+    var srcYahooEl = document.getElementById('srcYahoo');
+    var srcCoingeckoEl = document.getElementById('srcCoingecko');
+    srcFinnhubEl.querySelector('.src-val').textContent = priceFinnhub ? '$' + priceFinnhub.toFixed(2) : 'N/A';
+    srcYahooEl.querySelector('.src-val').textContent = priceYahoo ? '$' + priceYahoo.toFixed(2) : 'N/A';
+    srcCoingeckoEl.querySelector('.src-val').textContent = btcPrice ? '$' + btcPrice.toLocaleString() : 'N/A';
+    srcFinnhubEl.className = 'source-badge';
+    srcYahooEl.className = 'source-badge';
+    srcCoingeckoEl.className = 'source-badge';
+    sourcesEl.style.display = 'block';
+
+    // Show source agreement warning
+    if (priceFinnhub && priceYahoo) {
+      var diff = Math.abs(priceFinnhub - priceYahoo) / priceFinnhub;
+      if (diff > 0.005) {
+        srcFinnhubEl.classList.add('warn');
+        srcYahooEl.classList.add('warn');
+      }
     }
 
-    var beta = metrics.metric.beta;
-    var divYield = metrics.metric.dividYieldIndicatedAnnual || metrics.metric.dividYield5Y || 0;
-    var price = (quote && quote.c) ? quote.c : null;
+    // Stats card
+    var priceDisplay = priceFinnhub && priceYahoo
+      ? '<span style="color:var(--accent)">$' + priceFinnhub.toFixed(2) + '</span> <span style="color:var(--text2);font-size:11px">(Yahoo: $' + priceYahoo.toFixed(2) + ')</span>'
+      : priceFinnhub ? '<span style="color:var(--accent)">$' + priceFinnhub.toFixed(2) + '</span>'
+      : priceYahoo ? '<span style="color:var(--accent)">$' + priceYahoo.toFixed(2) + '</span>'
+      : 'N/A';
 
-    if (beta === null || beta === undefined || isNaN(beta)) {
-      showBetaError('Beta data not available for "' + ticker + '". Use the manual inputs below to enter beta and yield yourself.');
-      return;
+    var yieldDisplay = divYield !== null && divYield !== undefined && divYield > 0
+      ? '<span class="stat-val">' + (divYield * 100).toFixed(2) + '%</span>'
+      : '<span class="stat-val" style="color:var(--text2)">N/A</span>';
+
+    var betaDisplay = beta !== null
+      ? '<span class="stat-val">' + beta.toFixed(2) + '</span>'
+      : '<span class="stat-val" style="color:var(--text2)">N/A</span>';
+
+    var qualityBadge = priceFinnhub && priceYahoo ? (Math.abs(priceFinnhub - priceYahoo) / priceFinnhub <= 0.005 ? '&#10003; Sources agree' : '&#9888; Sources differ &gt;0.5%') : '&#10003; Single source';
+
+    statsEl.innerHTML =
+      '<div style="font-weight:700;font-size:16px;color:var(--accent);margin-bottom:10px">' + ticker + '</div>' +
+      '<div style="font-size:11px;color:var(--text2);margin-bottom:10px">' + qualityBadge + '</div>' +
+      '<div class="stat-row"><span class="stat-label">Price</span>' + priceDisplay + '</div>' +
+      '<div class="stat-row"><span class="stat-label">Beta</span>' + betaDisplay + '</div>' +
+      '<div class="stat-row"><span class="stat-label">Div Yield</span>' + yieldDisplay + '</div>';
+
+    if (beta === null) {
+      statsEl.innerHTML += '<div class="pb-error">Beta not available for this ticker. Try another (e.g. AAPL, JEPI, SCHD).</div>';
     }
 
-    // Store for later recalculation
-    lastTickerData = { ticker: ticker, beta: parseFloat(beta), yield: parseFloat(divYield), price: price };
+    // Calculate portfolio
+    var STRK_price = CUR.STRK.price || 74.75;
+    var STRK_yield = (STRK_STATED_RATE * STRK_PAR) / STRK_price;
 
-    // Show ticker info
-    document.getElementById('betaTickerInfo').style.display = 'block';
-    document.getElementById('betaInfoTicker').textContent = ticker;
-    document.getElementById('betaInfoBeta').textContent = parseFloat(beta).toFixed(2);
-    document.getElementById('betaInfoYield').textContent = (parseFloat(divYield) * 100).toFixed(2) + '%';
-    document.getElementById('betaInfoPrice').textContent = price ? '$' + price.toFixed(2) : '—';
+    var targetBeta = beta !== null ? beta : 1.5;
+    var targetYield = divYield !== null && divYield !== undefined ? divYield : 0;
 
-    // Auto-fill manual inputs
-    document.getElementById('manualBeta').value = parseFloat(beta).toFixed(2);
-    document.getElementById('manualYield').value = (parseFloat(divYield) * 100).toFixed(2);
+    var result = pbCalcPortfolio(targetBeta, targetYield, STRK_price, STRK_yield);
+    pbRenderPortfolio(result.wBTC, result.wMSTR, result.wSTRK, targetBeta, targetYield, STRK_price, STRK_yield);
 
-    runBetaCalc(parseFloat(beta), parseFloat(divYield));
+    resultsEl.style.display = 'block';
+    chartArea.style.display = 'block';
 
   }).catch(function() {
-    document.getElementById('betaLoading').style.display = 'none';
-    document.getElementById('betaAnalyzeBtn').disabled = false;
-    document.getElementById('betaAnalyzeBtn').textContent = 'Analyze';
-    showBetaError('Network error looking up "' + ticker + '". Please try again or use the manual inputs below.');
+    statsEl.innerHTML = '<div class="pb-error">Network error looking up "' + ticker + '". Please try again.</div>';
   });
 }
 
-function showBetaError(msg) {
-  var el = document.getElementById('betaError');
-  el.textContent = msg;
-  el.style.display = 'block';
-  lastTickerData = null;
-}
+function pbCalcTarget() {
+  var targetYieldPct = parseFloat(document.getElementById('pbTargetYield').value) || 0;
+  if (targetYieldPct <= 0) return;
 
-function useManualBeta() {
-  var beta = parseFloat(document.getElementById('manualBeta').value) || 1.5;
-  var yieldPct = parseFloat(document.getElementById('manualYield').value) || 0;
-  lastTickerData = { ticker: null, beta: beta, yield: yieldPct / 100, price: null };
-  document.getElementById('betaTickerInfo').style.display = 'none';
-  runBetaCalc(beta, yieldPct / 100);
-}
-
-function runBetaCalc(targetBeta, targetYield) {
-  // BTC: beta=1.0, yield=0%
-  // MSTR: beta=3.18, yield=0%
-  // STRK: beta=0.65, yield = (statedRate * par) / price
-  // Fix BTC at 15%, solve MSTR and STRK from the remaining 85%
-  // to match both target beta AND target yield exactly.
-  //
-  // System (with BTC fixed at 0.15):
-  //   wBTC + wMSTR + wSTRK = 1
-  //   wMSTR*3.18 + wSTRK*0.65 = targetBeta - 0.15   [beta eq]
-  //   wSTRK*STRK_yield            = targetYield         [yield eq]
-  //
-  // Solving: wSTRK = targetYield / STRK_yield
-  //          wMSTR = (targetBeta - 0.15 - wSTRK*0.65) / 3.18
+  var resultsEl = document.getElementById('pbYieldResult');
+  var resultsEl2 = document.getElementById('pbResults');
+  var chartArea = document.getElementById('pbChartArea');
+  var sourcesEl = document.getElementById('pbDataSources');
 
   var STRK_price = CUR.STRK.price || 74.75;
   var STRK_yield = (STRK_STATED_RATE * STRK_PAR) / STRK_price;
 
+  var targetYield = targetYieldPct / 100;
+  var result = pbCalcPortfolio(1.5, targetYield, STRK_price, STRK_yield);
+
+  var STRK_effYield = STRK_yield * 100;
+  var actualYield = result.wMSTR * MSTR_YIELD + result.wSTRK * STRK_yield;
+  var actualBeta = result.wBTC * BTC_BETA + result.wMSTR * MSTR_BETA + result.wSTRK * STRK_BETA;
+
+  var total = 10000;
+  resultsEl.innerHTML =
+    '<div style="font-size:13px;font-weight:600;margin-bottom:8px">Allocation for ' + targetYieldPct + '% target yield</div>' +
+    '<div class="alloc-row"><span>Bitcoin (BTC)</span><span class="alloc-pct">' + Math.round(result.wBTC * 100) + '% <span class="alloc-amt">($' + Math.round(total * result.wBTC).toLocaleString() + ')</span></span></div>' +
+    '<div class="alloc-row"><span>MicroStrategy (MSTR)</span><span class="alloc-pct">' + Math.round(result.wMSTR * 100) + '% <span class="alloc-amt">($' + Math.round(total * result.wMSTR).toLocaleString() + ')</span></span></div>' +
+    '<div class="alloc-row"><span>Strategy Prefs (STRK)</span><span class="alloc-pct">' + Math.round(result.wSTRK * 100) + '% <span class="alloc-amt">($' + Math.round(total * result.wSTRK).toLocaleString() + ')</span></span></div>' +
+    '<div class="pb-notes">STRK current effective yield: <strong>' + STRK_effYield.toFixed(2) + '%</strong> | Portfolio eff. yield: <strong>' + (actualYield * 100).toFixed(2) + '%</strong> | Portfolio beta: <strong>' + actualBeta.toFixed(2) + '</strong></div>';
+  resultsEl.style.display = 'block';
+  resultsEl2.style.display = 'none';
+  sourcesEl.style.display = 'none';
+  chartArea.style.display = 'block';
+
+  pbRenderPortfolio(result.wBTC, result.wMSTR, result.wSTRK, 1.5, targetYield, STRK_price, STRK_yield);
+}
+
+function pbCalcPortfolio(targetBeta, targetYield, STRK_price, STRK_yield) {
   var wBTC = 0.15; // fixed at 15%
   var wSTRK = 0;
   var wMSTR = 0;
 
   if (targetYield > 0) {
-    wSTRK = Math.max(0, Math.min(1 - wBTC, targetYield / STRK_yield));
+    wSTRK = clamp(targetYield / STRK_yield, 0, 0.85);
     wMSTR = Math.max(0, (targetBeta - wBTC - wSTRK * STRK_BETA) / MSTR_BETA);
   } else {
-    // No yield target — use BTC + MSTR only
     wSTRK = 0;
     wMSTR = Math.max(0, (targetBeta - wBTC) / MSTR_BETA);
   }
 
-  // Normalize so weights sum to 1
   var total = wBTC + wMSTR + wSTRK;
-  if (total > 1) {
-    var scale = 1 / total;
-    wBTC *= scale;
-    wMSTR *= scale;
-    wSTRK *= scale;
-  } else if (total < 0.9) {
-    // If beta/yield constraints push total below 90%, adjust BTC upward
-    wBTC = 1 - wMSTR - wSTRK;
-    wBTC = Math.max(0, wBTC);
+  if (total > 0) {
+    wBTC /= total; wMSTR /= total; wSTRK /= total;
   }
 
-  runBetaRender(wBTC, wMSTR, wSTRK, targetBeta, targetYield, STRK_yield);
+  return { wBTC: wBTC, wMSTR: wMSTR, wSTRK: wSTRK };
 }
 
-function runBetaRender(wBTC, wMSTR, wSTRK, targetBeta, targetYield, STRK_yield) {
-  var total = parseFloat(document.getElementById('betaPrincipal').value) || 10000;
+function pbRenderPortfolio(wBTC, wMSTR, wSTRK, targetBeta, targetYield, STRK_price, STRK_yield) {
+  var total = 10000;
   document.getElementById('totalInv').textContent = '$' + Math.round(total).toLocaleString();
 
   var actualBeta = wBTC * BTC_BETA + wMSTR * MSTR_BETA + wSTRK * STRK_BETA;
   var actualYield = wMSTR * MSTR_YIELD + wSTRK * STRK_yield;
+  var STRK_effYield = STRK_yield * 100;
 
-  var STRK_price = CUR.STRK.price;
-  var STRK_effYield = (STRK_STATED_RATE * STRK_PAR) / STRK_price * 100;
-
-  var tickerNote = lastTickerData && lastTickerData.ticker
-    ? lastTickerData.ticker + ' &rarr; beta ' + lastTickerData.beta.toFixed(2) + ', yield ' + (lastTickerData.yield * 100).toFixed(2) + '%'
-    : 'Manual inputs';
-
-  // Build alloc data (BTC=orange, MSTR=cyan, STRK=yellow)
   var allocData = [
     { name: 'Bitcoin', pct: Math.round(wBTC * 100), amt: Math.round(total * wBTC), color: '#f7931a' },
     { name: 'MSTR', pct: Math.round(wMSTR * 100), amt: Math.round(total * wMSTR), color: '#00d4ff' },
-    { name: 'STRK', pct: Math.round(wSTRK * 100), amt: Math.round(total * wSTRK), color: '#f39c12' }
+    { name: 'STRK', pct: Math.round(wSTRK * 100), amt: Math.round(total * wSTRK), color: '#f5a623' }
   ].filter(function(a) { return a.pct > 0; });
 
-  // Render donut chart
   var donutCtx = document.getElementById('donutChart').getContext('2d');
   if (donutChart) { donutChart.destroy(); }
   donutChart = new Chart(donutCtx, {
@@ -794,18 +827,18 @@ function runBetaRender(wBTC, wMSTR, wSTRK, targetBeta, targetYield, STRK_yield) 
     }
   });
 
-  // Render alloc list
   var allocListEl = document.getElementById('allocList');
   allocListEl.innerHTML = allocData.map(function(a) {
     return '<div class="alloc-item"><div class="nm"><div class="dot" style="background:' + a.color + '"></div>' + a.name + '</div><div><span class="alloc-pct">' + a.pct + '%</span> <span class="alloc-amt">($' + a.amt.toLocaleString() + ')</span></div></div>';
   }).join('');
 
-  // Render beta stats
-  var betaStatsEl = document.getElementById('betaStats');
-  betaStatsEl.innerHTML =
-    '<div class="beta-stat"><div class="val">' + actualBeta.toFixed(2) + '</div><div class="lbl">Portfolio Beta</div></div>' +
-    '<div class="beta-stat"><div class="val">' + (actualYield * 100).toFixed(1) + '%</div><div class="lbl">Eff. Yield</div></div>' +
-    '<div class="beta-stat"><div class="val" style="font-size:13px;line-height:1.4">' + tickerNote + '</div><div class="lbl">STRK Yield: ' + STRK_effYield.toFixed(1) + '% eff</div></div>';
+  var resultsEl = document.getElementById('pbResults');
+  resultsEl.innerHTML =
+    '<h3>Portfolio Breakdown</h3>' +
+    '<div class="alloc-row"><span>Bitcoin (BTC) <span style="color:var(--text2);font-size:11px">beta 1.0, yield 0%</span></span><span class="alloc-pct">' + Math.round(wBTC * 100) + '% <span class="alloc-amt">($' + Math.round(total * wBTC).toLocaleString() + ')</span></span></div>' +
+    '<div class="alloc-row"><span>MicroStrategy (MSTR) <span style="color:var(--text2);font-size:11px">beta 3.18, yield 0%</span></span><span class="alloc-pct">' + Math.round(wMSTR * 100) + '% <span class="alloc-amt">($' + Math.round(total * wMSTR).toLocaleString() + ')</span></span></div>' +
+    '<div class="alloc-row"><span>Strategy Prefs (STRK) <span style="color:var(--text2);font-size:11px">beta 0.65, yield ' + STRK_effYield.toFixed(2) + '%</span></span><span class="alloc-pct">' + Math.round(wSTRK * 100) + '% <span class="alloc-amt">($' + Math.round(total * wSTRK).toLocaleString() + ')</span></span></div>' +
+    '<div class="pb-notes">Portfolio beta: <strong>' + actualBeta.toFixed(2) + '</strong> | Eff. yield: <strong>' + (actualYield * 100).toFixed(2) + '%</strong> | STRK eff. yield at current price: <strong>' + STRK_effYield.toFixed(2) + '%</strong></div>';
 }
 
 
