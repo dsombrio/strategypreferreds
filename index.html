@@ -540,27 +540,38 @@ function genSeries(ticker, startDate, endDate, startPrice, endPrice, periods) {
   return data;
 }
 
-var SIX_MO_AGO = new Date('2025-09-30');
-var THREE_MO_AGO = new Date('2025-12-31');
-var YTD_START = new Date('2026-01-01');
-
 function buildChartData() {
   var _d = window._chartData || {};
   var today = new Date();
-  var oneYr = new Date();
-  oneYr.setFullYear(oneYr.getFullYear() - 1);
-  var spy = _d.SPY || [];
-  var par100 = spy.filter(function(p) {
+  var oneYrAgo = new Date(); oneYrAgo.setFullYear(oneYrAgo.getFullYear() - 1);
+
+  // Build $100 Par as a proper horizontal line spanning the ticker's date range
+  var allTickers = [].concat(_d.STRC||[], _d.STRK||[], _d.STRD||[], _d.STRF||[]);
+  var minD = null, maxD = null;
+  allTickers.forEach(function(p) {
     var d = new Date(p.x);
-    return d >= oneYr && d <= today;
-  }).map(function(p) { return {x: new Date(p.x), y: 100}; });
+    if (!minD || d < minD) minD = d;
+    if (!maxD || d > maxD) maxD = d;
+  });
+  var par100 = [];
+  if (minD && maxD) {
+    var cur = new Date(minD);
+    cur.setDate(15); // mid-month
+    while (cur <= maxD) {
+      par100.push({ x: new Date(cur), y: 100 });
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    par100.push({ x: new Date(maxD), y: 100 });
+  }
+  if (par100.length < 2) par100 = [{x: oneYrAgo, y: 100}, {x: today, y: 100}];
+
   return {
     STRC:  _d.STRC  || [],
     STRK:  _d.STRK  || [],
     STRD:  _d.STRD  || [],
     STRF:  _d.STRF  || [],
     STRE:  [],
-    '$100 Par': par100.length ? par100 : [{x: new Date(), y: 100}]
+    '$100 Par': par100
   };
 }
 
